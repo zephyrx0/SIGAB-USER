@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:sigab/api_service.dart';
 import 'detail_riwayat_banjir_screen.dart';
+import 'home_screen.dart';
+import 'cuaca_screen.dart';
+import 'lapor_screen.dart';
+import 'lainnya_screen.dart';
 
 class RiwayatBanjirScreen extends StatefulWidget {
   const RiwayatBanjirScreen({super.key});
@@ -10,27 +15,67 @@ class RiwayatBanjirScreen extends StatefulWidget {
 
 class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
   bool _isBanjirTerkini = false;
+  bool _isLoading = true;
+  String _error = '';
+  List<dynamic>? _riwayatBanjir;
 
-  Widget _buildFloodCard({
-    required String date,
-    required String time,
-    required String location,
-    required String depth,
-    required Color statusColor,
-    required String status,
-  }) {
+  @override
+  void initState() {
+    super.initState();
+    _fetchRiwayatBanjir();
+  }
+
+  Future<void> _fetchRiwayatBanjir() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = '';
+      });
+
+      final data = await ApiService.getRiwayatBanjir();
+      setState(() {
+        _riwayatBanjir = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Gagal memuat data: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Color _getStatusColor(String kategori) {
+    switch (kategori.toLowerCase()) {
+      case 'tinggi':
+        return Colors.red;
+      case 'sedang':
+        return Colors.orange;
+      case 'rendah':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildFloodCard(Map<String, dynamic> riwayat) {
+    final waktu = DateTime.parse(riwayat['waktu_kejadian']);
+    final formattedDate = '${waktu.day}-${waktu.month}-${waktu.year}';
+    final formattedTime = '${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}';
+    final statusColor = _getStatusColor(riwayat['kategori_kedalaman']);
+    
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetailRiwayatBanjirScreen(
-              date: date,
-              time: time,
-              location: location,
-              depth: depth,
+              date: formattedDate,
+              time: formattedTime,
+              location: riwayat['wilayah_banjir'],
+              depth: riwayat['tingkat_kedalaman'],
               statusColor: statusColor,
-              status: status,
+              status: riwayat['kategori_kedalaman'],
             ),
           ),
         );
@@ -58,12 +103,15 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                 const Icon(Icons.location_on_outlined,
                     size: 20, color: Colors.grey),
                 const SizedBox(width: 8),
-                Text(
-                  'Citeureup (0.07 LS, 109.37 BT)',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
+                Expanded(
+                  child: Text(
+                    riwayat['wilayah_banjir'],
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                      fontFamily: 'Poppins',
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 const Spacer(),
@@ -88,7 +136,7 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '$date, $time WIB',
+                        '$formattedDate, $formattedTime WIB',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -104,7 +152,7 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          'Kedalaman Banjir: $status',
+                          'Kedalaman Banjir: ${riwayat['kategori_kedalaman']}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -134,7 +182,7 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                           textAlign: TextAlign.center,
                         ),
                         Text(
-                          depth,
+                          riwayat['tingkat_kedalaman'],
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -181,26 +229,28 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
               children: [
                 const Icon(Icons.flag, color: Colors.orange, size: 24),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Wilayah Banjir',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontFamily: 'Poppins',
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Wilayah Banjir',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontFamily: 'Poppins',
+                        ),
                       ),
-                    ),
-                    Text(
-                      location,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins',
+                      Text(
+                        riwayat['wilayah_banjir'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Poppins',
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -222,11 +272,6 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 40,
-                    ),
-                    const SizedBox(width: 12),
                     const Text(
                       'Riwayat Banjir',
                       style: TextStyle(
@@ -293,40 +338,42 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    _buildFloodCard(
-                      date: 'Senin, 7 April 2025',
-                      time: '12.27',
-                      location: 'Jl. Sukabirus, sebagian Jl. Radio Palasari',
-                      depth: '10 cm',
-                      statusColor: Colors.green,
-                      status: 'Rendah',
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (_error.isNotEmpty)
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
+                      Text(_error),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchRiwayatBanjir,
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                )
+              else if (_riwayatBanjir == null || _riwayatBanjir!.isEmpty)
+                const Center(
+                  child: Text(
+                    'Tidak ada data riwayat banjir',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'Poppins',
+                      color: Colors.grey,
                     ),
-                    _buildFloodCard(
-                      date: 'Senin, 24 Maret 2025',
-                      time: '12.56',
-                      location:
-                          'Jl. Radio Palasari, Sebagian hulu sungai Cigede',
-                      depth: '50 cm',
-                      statusColor: Colors.orange,
-                      status: 'Sedang',
-                    ),
-                    _buildFloodCard(
-                      date: 'Senin, 10 Maret 2025',
-                      time: '23.33',
-                      location:
-                          'Jl. Radio Palasari, Sebagian hulu sungai Cigede',
-                      depth: '125 cm',
-                      statusColor: Colors.red,
-                      status: 'Tinggi',
-                    ),
-                  ],
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: _riwayatBanjir!.map((riwayat) => _buildFloodCard(riwayat)).toList(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -340,7 +387,32 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
           currentIndex: 3,
           onTap: (index) {
             if (index != 3) {
-              Navigator.pop(context);
+              switch (index) {
+                case 0:
+                  Navigator.pushReplacement(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const HomeScreen())
+                  );
+                  break;
+                case 1:
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CuacaScreen())
+                  );
+                  break;
+                case 2:
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LaporScreen())
+                  );
+                  break;
+                case 4:
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LainnyaScreen())
+                  );
+                  break;
+              }
             }
           },
           type: BottomNavigationBarType.fixed,

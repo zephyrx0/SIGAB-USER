@@ -1,8 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../api_service.dart';
 
-class TempatEvakuasiScreen extends StatelessWidget {
+class TempatEvakuasiScreen extends StatefulWidget {
   const TempatEvakuasiScreen({super.key});
+
+  @override
+  State<TempatEvakuasiScreen> createState() => _TempatEvakuasiScreenState();
+}
+
+class _TempatEvakuasiScreenState extends State<TempatEvakuasiScreen> {
+  bool _isLoading = true;
+  List<dynamic> _tempatEvakuasi = [];
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTempatEvakuasi();
+  }
+
+  Future<void> _fetchTempatEvakuasi() async {
+    try {
+      final response = await ApiService.getEvacuationPlaces();
+      setState(() {
+        _tempatEvakuasi = response['data'] ?? [];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _launchMapsUrl(String url) async {
+    if (!await launchUrl(Uri.parse(url),
+        mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tidak dapat membuka Google Maps'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   Widget _buildLinksOutIcon({double size = 20}) {
     return SizedBox(
@@ -34,9 +80,9 @@ class TempatEvakuasiScreen extends StatelessWidget {
   }
 
   Widget _buildEvakuasiCard(
-      String title, String imagePath, VoidCallback onTap) {
+      String title, String imagePath, String mapsUrl, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => _launchMapsUrl(mapsUrl),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         height: 140,
@@ -56,12 +102,27 @@ class TempatEvakuasiScreen extends StatelessWidget {
           child: Stack(
             children: [
               // Image
-              Image.asset(
-                imagePath,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              imagePath.startsWith('http')
+                  ? Image.network(
+                      imagePath,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          'assets/images/tempat_evakuasi.jpg',
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    )
+                  : Image.asset(
+                      imagePath,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
               // Gradient Overlay
               Container(
                 decoration: BoxDecoration(
@@ -83,13 +144,17 @@ class TempatEvakuasiScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Container(
@@ -129,47 +194,41 @@ class TempatEvakuasiScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              _buildEvakuasiCard(
-                'Masjid An-Nur Sukabirus',
-                'assets/images/annur.jpg',
-                () {
-                  // TODO: Implement navigation to detail page
-                  debugPrint('Tapped Masjid An-Nur Sukabirus');
-                },
-              ),
-              _buildEvakuasiCard(
-                'Kantor Desa Citeureup',
-                'assets/images/kantor.jpeg',
-                () {
-                  // TODO: Implement navigation to detail page
-                  debugPrint('Tapped Kantor Desa Citeureup');
-                },
-              ),
-              _buildEvakuasiCard(
-                'Balai RW 17',
-                'assets/images/balai17.jpg',
-                () {
-                  // TODO: Implement navigation to detail page
-                  debugPrint('Tapped Balai RW 17');
-                },
-              ),
-              _buildEvakuasiCard(
-                'Balai RW 11',
-                'assets/images/balai11.jpg',
-                () {
-                  // TODO: Implement navigation to detail page
-                  debugPrint('Tapped Balai RW 11');
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Terjadi kesalahan: $_error',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchTempatEvakuasi,
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      children: _tempatEvakuasi.map((tempat) {
+                        return _buildEvakuasiCard(
+                          tempat['nama_tempat'] ?? '',
+                          tempat['foto'] ?? 'assets/images/tempat_evakuasi.jpg',
+                          tempat['link_gmaps'] ?? '',
+                          () {},
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
       bottomNavigationBar: Theme(
         data: ThemeData(
           splashColor: Colors.transparent,

@@ -43,7 +43,10 @@ const pool = new Pool({
   port: process.env.DB_PORT,
   database: process.env.DB_NAME,
   user: process.env.DB_USER,
-  password: String(process.env.DB_PASSWORD) // Ensure password is a string
+  password: String(process.env.DB_PASSWORD),
+  ssl: {
+    rejectUnauthorized: false // Diperlukan untuk koneksi ke Aiven
+  }
 });
 
 // Handle pool events

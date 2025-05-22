@@ -1,10 +1,57 @@
 import 'package:flutter/material.dart';
+import '../api_service.dart';
 
 import 'ubah_profil_screen.dart';
 import 'ubah_password_screen.dart';
 
-class ProfilScreen extends StatelessWidget {
+class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
+
+  @override
+  State<ProfilScreen> createState() => _ProfilScreenState();
+}
+
+class _ProfilScreenState extends State<ProfilScreen> {
+  String? nama;
+  String? nomorWa;
+  bool isLoading = true;
+  String? error;
+  bool _isFirstLoad = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isFirstLoad) {
+      _isFirstLoad = false;
+      _loadProfile();
+    } else {
+      // Selalu refresh data setiap halaman muncul kembali
+      _loadProfile();
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final data = await ApiService.viewProfile();
+      setState(() {
+        nama = data['data']['nama'];
+        nomorWa = data['data']['nomor_wa'];
+        isLoading = false;
+      });
+    } catch (e) {
+      if (e.toString().contains('Token tidak ditemukan')) {
+        if (mounted) {
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil('/login', (route) => false);
+          return;
+        }
+      }
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,18 +101,26 @@ class ProfilScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.blue),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
-                          'USER229297',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
+                        child: isLoading
+                            ? CircularProgressIndicator()
+                            : error != null
+                                ? Text(
+                                    'Error: $error',
+                                    style: TextStyle(color: Colors.red),
+                                  )
+                                : Text(
+                                    nama ?? '-',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontFamily: 'Poppins',
+                                    ),
+                                  ),
                       ),
                     ],
                   ),
@@ -89,26 +144,31 @@ class ProfilScreen extends StatelessWidget {
                 border: Border.all(color: Colors.blue),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
-                '088888XXXXX',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontFamily: 'Poppins',
-                ),
-              ),
+              child: isLoading
+                  ? SizedBox.shrink()
+                  : Text(
+                      nomorWa ?? '-',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
             ),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const UbahProfilScreen(),
                     ),
                   );
+                  if (result == true) {
+                    _loadProfile();
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFA726),
@@ -162,12 +222,14 @@ class ProfilScreen extends StatelessWidget {
               width: double.infinity,
               height: 48,
               child: OutlinedButton(
-                onPressed: () {
+                onPressed: () async {
+                  final parentContext = context;
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
                       return Dialog(
-                        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+                        insetPadding:
+                            const EdgeInsets.symmetric(horizontal: 40),
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                           child: Column(
@@ -208,9 +270,11 @@ class ProfilScreen extends StatelessWidget {
                                           Navigator.of(context).pop();
                                         },
                                         style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: Color(0xFFFFA726)),
+                                          side: const BorderSide(
+                                              color: Color(0xFFFFA726)),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                         child: const Text(
@@ -230,22 +294,29 @@ class ProfilScreen extends StatelessWidget {
                                     child: SizedBox(
                                       height: 40,
                                       child: ElevatedButton(
-                                        onPressed: () {
-                                          Navigator.of(context).pop(); // Tutup dialog
-                                          Navigator.pushNamedAndRemoveUntil(
-                                            context,
+                                        onPressed: () async {
+                                          Navigator.of(context).pop();
+                                          await Future.delayed(const Duration(
+                                              milliseconds: 100));
+                                          await ApiService.logout();
+                                          _loadProfile();
+                                          if (!parentContext.mounted) return;
+                                          Navigator.of(parentContext)
+                                              .pushNamedAndRemoveUntil(
                                             '/login',
-                                            (route) => false, // Hapus semua route sebelumnya
+                                            (route) => false,
                                           );
                                         },
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFFFA726),
+                                          backgroundColor:
+                                              const Color(0xFFFFA726),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                         child: const Text(
-                                          'Ya',
+                                          'Ya, Keluar',
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,

@@ -14,6 +14,39 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkToken();
+  }
+
+  Future<void> _checkToken() async {
+    if (_isInitialized) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final token = await ApiService.getToken();
+      if (!mounted) return;
+      
+      if (token != null && token.isNotEmpty) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+      }
+    } catch (e) {
+      // Token tidak ada atau tidak valid, biarkan user di halaman login
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isInitialized = true;
+        });
+      }
+    }
+  }
 
   Future<void> _handleLogin() async {
     setState(() {

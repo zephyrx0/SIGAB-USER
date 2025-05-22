@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="6dd67f0e-bb95-4ea2-8b83-cc933ae40c20" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/API/.env" beforeDir="false" afterPath="$PROJECT_DIR$/API/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API/logs/combined.log" beforeDir="false" afterPath="$PROJECT_DIR$/API/logs/combined.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API/logs/error.log" beforeDir="false" afterPath="$PROJECT_DIR$/API/logs/error.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API/src/config/database.js" beforeDir="false" afterPath="$PROJECT_DIR$/API/src/config/database.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/API/src/controllers/laporanController.js" beforeDir="false" afterPath="$PROJECT_DIR$/API/src/controllers/laporanController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FE-ONLY/sigab/lib/screens/riwayat_banjir_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FE-ONLY/sigab/lib/screens/riwayat_banjir_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/android/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/api_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/api_service.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/banjir_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/banjir_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/cuaca_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/cuaca_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/detail_laporan_banjir_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/detail_laporan_banjir_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/detail_laporan_infrastruktur_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/detail_laporan_infrastruktur_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/laporan_banjir_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/laporan_banjir_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/laporan_infrastruktur_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/laporan_infrastruktur_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/login_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/profil_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/profil_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/riwayat_banjir_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/riwayat_banjir_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/tempat_evakuasi_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/lib/screens/tempat_evakuasi_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/SIGAB-FIX MUNGKIN/sigab/pubspec.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2xRg2QyzDCg1fxzjIm53xCz2l12" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/Jeisus/Semester 8/SIGAB-USER/SIGAB-FIX MUNGKIN"
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="6dd67f0e-bb95-4ea2-8b83-cc933ae40c20" name="Changes" comment="" />
+      <created>1747906094594</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1747906094594</updated>
+    </task>
+    <servers />
+  </component>
+</project>

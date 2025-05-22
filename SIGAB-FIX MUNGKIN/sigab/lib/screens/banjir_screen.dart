@@ -3,6 +3,8 @@ import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_map/flutter_map.dart';
 import 'dart:ui' show Path;
 import 'riwayat_banjir_screen.dart';
+import '../api_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 class BanjirScreen extends StatefulWidget {
   const BanjirScreen({super.key});
@@ -12,8 +14,115 @@ class BanjirScreen extends StatefulWidget {
 }
 
 class _BanjirScreenState extends State<BanjirScreen> {
+  Position? _userLocation;
   bool _isBanjirTerkini = true;
+  bool _isLoading = true;
+  String _error = '';
+  List<dynamic>? _floodData;
 
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+    _fetchFloodData();
+  }
+
+  Future<void> _fetchFloodData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = '';
+      });
+
+      final data = await ApiService.getFloodData();
+      
+      // Sort data berdasarkan waktu kejadian
+      final List sortedData = (data['data'] as List).toList()
+        ..sort((a, b) => DateTime.parse(b['waktu_kejadian'])
+            .compareTo(DateTime.parse(a['waktu_kejadian'])));
+
+      setState(() {
+        _floodData = sortedData;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Gagal memuat data: ${e.toString()}';
+        _isLoading = false;
+      });
+    }
+  }
+
+  Color _getStatusColor(String kategori) {
+    switch (kategori.toLowerCase()) {
+      case 'tinggi':
+        return Colors.red;
+      case 'sedang':
+        return Colors.orange;
+      case 'rendah':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildFloodList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error.isNotEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            Text(_error),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchFloodData,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_floodData == null || _floodData!.isEmpty) {
+      return const Center(
+        child: Text(
+          'Tidak ada data banjir',
+          style: TextStyle(
+            fontSize: 16,
+            fontFamily: 'Poppins',
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _floodData!.length,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemBuilder: (context, index) {
+        final flood = _floodData![index];
+        final DateTime waktu = DateTime.parse(flood['waktu_kejadian']);
+        
+        return _buildFloodCard(
+          date: '${waktu.day}-${waktu.month}-${waktu.year}',
+          time: '${waktu.hour}:${waktu.minute}',
+          location: flood['wilayah_banjir'],
+          depth: flood['tingkat_kedalaman'],
+          statusColor: _getStatusColor(flood['kategori_kedalaman']),
+          status: flood['kategori_kedalaman'],
+          coordinates: flood['koordinat_lokasi'], // Tambah parameter koordinat
+        );
+      },
+    );
+  }
   Widget _buildFloodCard({
     required String date,
     required String time,
@@ -21,6 +130,7 @@ class _BanjirScreenState extends State<BanjirScreen> {
     required String depth,
     required Color statusColor,
     required String status,
+    required Map<String, dynamic> coordinates, // Tambah parameter koordinat
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -45,16 +155,24 @@ class _BanjirScreenState extends State<BanjirScreen> {
               const Icon(Icons.location_on_outlined,
                   size: 20, color: Colors.grey),
               const SizedBox(width: 8),
-              Text(
-                'Citeureup (0.07 LS, 109.37 BT)',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontFamily: 'Poppins',
+              Expanded(
+                child: Text(
+                  location,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontFamily: 'Poppins',
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const Spacer(),
-              const Icon(Icons.share, size: 20),
+              IconButton(
+                onPressed: () {
+                  // Share logic
+                },
+                icon: const Icon(Icons.share, size: 20),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -149,9 +267,12 @@ class _BanjirScreenState extends State<BanjirScreen> {
                       fontFamily: 'Poppins',
                     ),
                   ),
-                  const Text(
-                    '10 Km dari lokasi anda',
-                    style: TextStyle(
+                  Text(
+                    _calculateDistance(
+                      double.parse(coordinates['y'].toString()),
+                      double.parse(coordinates['x'].toString())
+                    ),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       fontFamily: 'Poppins',
@@ -297,89 +418,139 @@ class _BanjirScreenState extends State<BanjirScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: FlutterMap(
-                  options: MapOptions(
-                    center: const LatLng(-6.983004, 107.628411),
-                    zoom: 14,
-                    minZoom: 5,
-                    maxZoom: 18,
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.sigab.app',
-                    ),
-                    MarkerLayer(
-                      markers: [
-                        Marker(
-                          point: const LatLng(-6.983004, 107.628411),
-                          width: 80,
-                          height: 80,
-                          child: const Icon(
-                            Icons.location_on,
-                            color: Colors.red,
-                            size: 40,
+                child: _floodData != null && _floodData!.isNotEmpty
+                    ? FlutterMap(
+                        options: MapOptions(
+                          center: LatLng(
+                            _floodData![0]['koordinat_lokasi']['y'],
+                            _floodData![0]['koordinat_lokasi']['x'],
                           ),
+                          zoom: 14,
+                          minZoom: 5,
+                          maxZoom: 18,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.sigab.app',
+                          ),
+                          // Tambah marker untuk lokasi user
+                          if (_userLocation != null) MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: LatLng(
+                                  _userLocation!.latitude,
+                                  _userLocation!.longitude,
+                                ),
+                                width: 80,
+                                height: 80,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.person_pin_circle,
+                                    color: Colors.blue,
+                                    size: 40,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          MarkerLayer(
+                            markers: _floodData!.map<Marker>((flood) {
+                              return Marker(
+                                point: LatLng(
+                                  double.parse(flood['koordinat_lokasi']['y'].toString()),
+                                  double.parse(flood['koordinat_lokasi']['x'].toString()),
+                                ),
+                                width: 80,
+                                height: 80,
+                                child: Icon(
+                                  Icons.location_on,
+                                  color: _getStatusColor(flood['kategori_kedalaman']),
+                                  size: 40,
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      )
+                    : const Center(child: Text('Tidak ada data lokasi banjir')),
               ),
             ),
             const SizedBox(height: 16),
-            // Current flood card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _buildFloodCard(
-                date: 'Senin, 10 Maret 2025',
-                time: '23.33',
-                location: 'Jl. Radio Palasari, Sebagian hulu sungai Cigede',
-                depth: '125 cm',
-                statusColor: Colors.red,
-                status: 'Tinggi',
-              ),
-            ),
+            // Flood cards from API data
+            if (!_isLoading && _floodData != null && _floodData!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildFloodList(),
+              )
+            else if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else
+              const Center(child: Text('Tidak ada data banjir terkini')),
           ] else ...[
-            // Riwayat Banjir cards
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  _buildFloodCard(
-                    date: 'Senin, 7 April 2025',
-                    time: '12.27',
-                    location: 'Jl. Sukabirus, sebagian Jl. Radio Palasari',
-                    depth: '10 cm',
-                    statusColor: Colors.green,
-                    status: 'Rendah',
-                  ),
-                  _buildFloodCard(
-                    date: 'Senin, 24 Maret 2025',
-                    time: '12.56',
-                    location: 'Jl. Radio Palasari, Sebagian hulu sungai Cigede',
-                    depth: '50 cm',
-                    statusColor: Colors.orange,
-                    status: 'Sedang',
-                  ),
-                  _buildFloodCard(
-                    date: 'Senin, 10 Maret 2025',
-                    time: '23.33',
-                    location: 'Jl. Radio Palasari, Sebagian hulu sungai Cigede',
-                    depth: '125 cm',
-                    statusColor: Colors.red,
-                    status: 'Tinggi',
-                  ),
-                ],
-              ),
-            ),
+            // Riwayat Banjir dari API
+            if (!_isLoading && _floodData != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: _buildFloodList(),
+              )
+            else if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else
+              const Center(child: Text('Tidak ada data riwayat banjir')),
           ],
           const SizedBox(height: 16),
         ],
       ),
     );
   }
+
+  Future<void> _getCurrentLocation() async {
+  try {
+    // Cek permission
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return;
+      }
+    }
+    
+    // Dapatkan posisi saat ini
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high
+    );
+    
+    setState(() {
+      _userLocation = position;
+    });
+  } catch (e) {
+    print('Error mendapatkan lokasi: $e');
+  }
+}
+
+String _calculateDistance(double lat, double lng) {
+  if (_userLocation == null) return 'Lokasi tidak tersedia';
+  
+  double distanceInMeters = Geolocator.distanceBetween(
+    _userLocation!.latitude,
+    _userLocation!.longitude,
+    lat,
+    lng
+  );
+  
+  if (distanceInMeters < 1000) {
+    return '${distanceInMeters.toStringAsFixed(0)} meter';
+  } else {
+    double distanceInKm = distanceInMeters / 1000;
+    return '${distanceInKm.toStringAsFixed(1)} km';
+  }
+}
 }
 
 class WavePainter extends CustomPainter {
@@ -423,3 +594,8 @@ class WavePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
+
+
+
+
+

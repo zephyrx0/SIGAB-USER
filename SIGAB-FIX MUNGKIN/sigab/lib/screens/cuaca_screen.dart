@@ -1,10 +1,100 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:http/http.dart' as http;
+import '../api_service.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart'; // Tambahkan import ini
 
-class CuacaScreen extends StatelessWidget {
+class CuacaScreen extends StatefulWidget {
   const CuacaScreen({super.key});
 
+  @override
+  State<CuacaScreen> createState() => _CuacaScreenState();
+}
+
+class _CuacaScreenState extends State<CuacaScreen> {
+  bool _isLoading = true;
+  String _error = '';
+  Map<String, dynamic>? _weatherData;
+  int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('id_ID', null).then((_) => _fetchWeatherData());
+  }
+
+  Future<void> _fetchWeatherData() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiService.appUrl}/cuaca'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _weatherData = data;
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Gagal mengambil data cuaca');
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _getWeatherIcon(String condition) {
+    // Map BMKG weather conditions to our icon assets
+    switch (condition.toLowerCase()) {
+      case 'hujan lebat':
+      case 'hujan deras':
+        return 'rainy';
+      case 'hujan ringan':
+      case 'hujan':
+        return 'cloudy_rain';
+      case 'berawan':
+        return 'cloudy';
+      case 'cerah berawan':
+        return 'partly_cloudy';
+      case 'cerah':
+        return 'sunny';
+      default:
+        return 'cloudy';
+    }
+  }
+
   Widget _buildCurrentWeather() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error.isNotEmpty) {
+      return Center(
+        child: Text(
+          _error,
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
+    final locationData = _weatherData!['lokasi'];
+    final weatherData = _weatherData!['data'][0]['cuaca'][0][0];
+    final now = DateTime.now();
+    final dateFormat = DateFormat('EEEE, d MMMM y', 'id_ID');
+    final formattedDate = dateFormat.format(now);
+
+    // Convert wind speed from m/s to km/h (1 m/s = 3.6 km/h)
+    final windSpeedKmh = (weatherData['ws'] * 3.6).round();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -20,7 +110,7 @@ class CuacaScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Rabu, 9 April 2025',
+            formattedDate,
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 16,
@@ -32,9 +122,9 @@ class CuacaScreen extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '23',
-                style: TextStyle(
+              Text(
+                '${weatherData['t']}',
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 64,
                   fontFamily: 'Poppins',
@@ -55,7 +145,7 @@ class CuacaScreen extends StatelessWidget {
               ),
               const Spacer(),
               SvgPicture.asset(
-                'assets/images/weather/cloudy_rain.svg',
+                'assets/images/weather/${_getWeatherIcon(weatherData['weather_desc'])}.svg',
                 width: 80,
                 height: 80,
                 colorFilter:
@@ -63,9 +153,9 @@ class CuacaScreen extends StatelessWidget {
               ),
             ],
           ),
-          const Text(
-            'Hujan Deras',
-            style: TextStyle(
+          Text(
+            weatherData['weather_desc'],
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontFamily: 'Poppins',
@@ -75,10 +165,11 @@ class CuacaScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildWeatherInfo(Icons.air, 'Kec. Angin', '15 km/jam'),
-              const SizedBox(width: 24),
               _buildWeatherInfo(
-                  Icons.water_drop_outlined, 'Kelembapan', '25 %'),
+                  Icons.air, 'Kec. Angin', '$windSpeedKmh km/jam'),
+              const SizedBox(width: 24),
+              _buildWeatherInfo(Icons.water_drop_outlined, 'Kelembapan',
+                  '${weatherData['hu']} %'),
             ],
           ),
         ],
@@ -109,6 +200,28 @@ class CuacaScreen extends StatelessWidget {
   }
 
   Widget _buildWarningCard() {
+    if (_isLoading || _error.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final todayForecast = _weatherData!['data'][0]['cuaca'][0];
+    final List<String> warnings = [];
+
+    // Cek kondisi hujan sedang
+    for (var forecast in todayForecast) {
+      if (forecast['weather_desc'].toString().toLowerCase() == 'hujan sedang') {
+        final localTime = DateTime.parse(forecast['local_datetime']).toLocal();
+        final timeFormat = DateFormat('HH:mm');
+        final formattedTime = timeFormat.format(localTime);
+        
+        warnings.add('Bawalah payung, hujan dengan intensitas sedang mungkin terjadi pada pukul $formattedTime WIB');
+      }
+    }
+
+    if (warnings.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -138,8 +251,7 @@ class CuacaScreen extends StatelessWidget {
                     ),
                   ),
                   TextSpan(
-                    text:
-                        '(Bawalah payung, badai berpetir mungkin terjadi pada pukul 13.00 WIB)',
+                    text: warnings.join('\n'),
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.95),
                       fontSize: 14,
@@ -157,6 +269,12 @@ class CuacaScreen extends StatelessWidget {
   }
 
   Widget _buildHourlyForecast() {
+    if (_isLoading || _error.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final todayForecast = _weatherData!['data'][0]['cuaca'][0];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -172,14 +290,16 @@ class CuacaScreen extends StatelessWidget {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: [
-              _buildHourlyWeatherCard('14.00', '22°C', 'cloudy_rain'),
-              _buildHourlyWeatherCard('15.00', '22°C', 'cloudy_rain'),
-              _buildHourlyWeatherCard('16.00', '21°C', 'cloudy_rain'),
-              _buildHourlyWeatherCard('17.00', '21°C', 'cloudy'),
-              _buildHourlyWeatherCard('18.00', '21°C', 'cloudy'),
-              _buildHourlyWeatherCard('19.00', '22°C', 'cloudy'),
-            ],
+            children: todayForecast.map<Widget>((forecast) {
+              final localTime =
+                  DateTime.parse(forecast['local_datetime']).toLocal();
+              final timeFormat = DateFormat('HH:mm');
+              return _buildHourlyWeatherCard(
+                timeFormat.format(localTime),
+                '${forecast['t']}°C',
+                _getWeatherIcon(forecast['weather_desc']),
+              );
+            }).toList(),
           ),
         ),
       ],
@@ -233,6 +353,13 @@ class CuacaScreen extends StatelessWidget {
   }
 
   Widget _buildDailyForecast() {
+    if (_isLoading || _error.isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final allForecasts = _weatherData!['data'][0]['cuaca'];
+    final dateFormat = DateFormat('MMM, d', 'id_ID');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -245,11 +372,16 @@ class CuacaScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _buildDailyWeatherRow('Apr, 10', 'cloudy_rain', '21°'),
-        _buildDailyWeatherRow('Apr, 11', 'sunny', '26°'),
-        _buildDailyWeatherRow('Apr, 12', 'cloudy', '25°'),
-        _buildDailyWeatherRow('Apr, 13', 'rainy', '21°'),
-        _buildDailyWeatherRow('Apr, 14', 'cloudy_rain', '21°'),
+        ...allForecasts.map((dayForecast) {
+          final firstForecast = dayForecast[0];
+          final date =
+              DateTime.parse(firstForecast['local_datetime']).toLocal();
+          return _buildDailyWeatherRow(
+            dateFormat.format(date),
+            _getWeatherIcon(firstForecast['weather_desc']),
+            '${firstForecast['t']}°',
+          );
+        }).toList(),
       ],
     );
   }
@@ -295,6 +427,12 @@ class CuacaScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override

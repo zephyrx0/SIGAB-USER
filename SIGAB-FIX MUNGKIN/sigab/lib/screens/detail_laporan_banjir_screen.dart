@@ -1,12 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import './home_screen.dart'; // Tambahkan import ini
+import '../api_service.dart';
+import './home_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class DetailLaporanBanjirScreen extends StatefulWidget {
   final String location;
+  final String imagePath; // Tambahkan properti imagePath
 
   const DetailLaporanBanjirScreen({
     super.key,
     required this.location,
+    required this.imagePath, // Tambahkan parameter required
   });
 
   @override
@@ -15,12 +23,232 @@ class DetailLaporanBanjirScreen extends StatefulWidget {
 }
 
 class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
+  Position? _currentLocation;
+  String? _currentAddress;
+  bool _isLoadingLocation = false;
   final TextEditingController _descriptionController = TextEditingController();
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
     _descriptionController.dispose();
     super.dispose();
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.green,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Terkirim',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Laporan anda telah terkirim',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: 'Poppins',
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFA726),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitLaporan() async {
+    if (_currentLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mohon tunggu, sedang mendapatkan lokasi...')),
+      );
+      await _getCurrentLocation(); // Coba dapatkan lokasi lagi
+      if (_currentLocation == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal mendapatkan lokasi. Mohon cek izin lokasi')),
+        );
+        return;
+      }
+    }
+
+    if (_descriptionController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mohon isi deskripsi laporan')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final userId = await ApiService.getUserIdFromToken();
+      if (userId == null) throw Exception('User ID tidak ditemukan');
+
+      final now = DateTime.now();
+      final waktu = now.toIso8601String();
+
+      print('Lokasi saat submit: ${_currentLocation?.latitude}, ${_currentLocation?.longitude}'); // Tambahkan log
+
+      await ApiService.submitLaporan(
+        idUser: userId,
+        tipeLaporan: 'Banjir',
+        lokasi: widget.location,
+        waktu: waktu,
+        deskripsi: _descriptionController.text,
+        foto: widget.imagePath,
+        titikLokasi: _currentLocation != null 
+          ? '(${_currentLocation!.longitude},${_currentLocation!.latitude})'
+          : '(0,0)',
+      );
+
+      if (!mounted) return;
+      _showSuccessDialog();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      // Cek permission lokasi
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Izin lokasi ditolak');
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Izin lokasi ditolak secara permanen');
+      }
+
+      // Dapatkan posisi
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high
+      );
+
+      print('Posisi didapat: ${position.latitude}, ${position.longitude}');
+
+      // Simpan posisi terlebih dahulu
+      setState(() {
+        _currentLocation = position;
+      });
+
+      try {
+        // Dapatkan alamat dari koordinat dalam blok try terpisah
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude
+        );
+
+        if (!mounted) return;
+
+        setState(() {
+          if (placemarks.isNotEmpty) {
+            final placemark = placemarks.first;
+            final street = placemark.street ?? '';
+            final subLocality = placemark.subLocality ?? '';
+            final locality = placemark.locality ?? '';
+            
+            _currentAddress = [street, subLocality, locality]
+                .where((e) => e.isNotEmpty)
+                .join(', ');
+          }
+          _isLoadingLocation = false;
+        });
+      } catch (geocodeError) {
+        print('Error saat mendapatkan alamat: $geocodeError');
+        // Tetap set loading false meski gagal dapat alamat
+        if (!mounted) return;
+        setState(() {
+          _isLoadingLocation = false;
+        });
+      }
+
+    } catch (e) {
+      print('Error mendapatkan lokasi: $e');
+      if (!mounted) return;
+      setState(() {
+        _isLoadingLocation = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
   }
 
   @override
@@ -77,11 +305,54 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              widget.location,
+                              _isLoadingLocation 
+                                ? 'Mendapatkan lokasi...'
+                                : _currentAddress ?? widget.location,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontFamily: 'Poppins',
                               ),
+                            ),
+                            const SizedBox(height: 8),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: kIsWeb 
+                                ? Image.network(
+                                    widget.imagePath,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: MediaQuery.of(context).size.width * 0.6,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: MediaQuery.of(context).size.width * 0.6,
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.error_outline,
+                                          color: Colors.red,
+                                          size: 48,
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Image.file(
+                                    File(widget.imagePath),
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: MediaQuery.of(context).size.width * 0.6,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        width: double.infinity,
+                                        height: MediaQuery.of(context).size.width * 0.6,
+                                        color: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.error_outline,
+                                          color: Colors.red,
+                                          size: 48,
+                                        ),
+                                      );
+                                    },
+                                  ),
                             ),
                           ],
                         ),
@@ -135,95 +406,19 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => Dialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[200],
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.check,
-                                    color: Colors.green,
-                                    size: 32,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Terkirim',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'Laporan anda telah terkirim',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: 'Poppins',
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFFFA726),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'OK',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: 'Poppins',
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      Navigator.of(context).pushAndRemoveUntil(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const HomeScreen(), // Navigasi ke HomeScreen yang sudah memiliki BottomNavigationBar
-                                        ),
-                                        (route) => false,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
+                    onTap: _isSubmitting ? null : _submitLaporan,
+                    child: Center(
+                      child: _isSubmitting
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Kirim Laporan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Poppins',
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Center(
-                      child: Text(
-                        'Lapor',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
                     ),
                   ),
                 ),
@@ -233,5 +428,11 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation(); // Panggil fungsi saat widget diinisialisasi
   }
 }

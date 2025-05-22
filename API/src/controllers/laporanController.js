@@ -3,10 +3,10 @@ const pool = require('../config/database');
 // Fungsi untuk membuat laporan baru
 exports.createReport = async (req, res) => {
   try {
-    // Get fields from form data
     const id_user = req.body.id_user;
     const tipe_laporan = req.body.tipe_laporan;
-    const lokasi = req.body.lokasi;
+    const lokasi = req.body.lokasi; // Nama lokasi seperti "Masjid An-Nur"
+    const titik_lokasi = req.body.titik_lokasi; // Bentuk string: "(107.61,-6.982)"
     const waktu = req.body.waktu;
     const deskripsi = req.body.deskripsi;
     const status = req.body.status;
@@ -16,13 +16,33 @@ exports.createReport = async (req, res) => {
       id_user,
       tipe_laporan,
       lokasi,
+      titik_lokasi,
       waktu,
       deskripsi,
       status,
       foto
     });
 
-    // Check if id_user exists in the user_app table
+    const requiredFields = {
+      id_user,
+      tipe_laporan,
+      waktu,
+      deskripsi,
+      lokasi,
+      titik_lokasi,
+      foto
+    };
+
+    for (const [key, value] of Object.entries(requiredFields)) {
+      if (!value || value.toString().trim() === '') {
+        return res.status(400).json({
+          status: 'error',
+          message: `Field '${key}' wajib diisi`
+        });
+      }
+    }
+
+    // Validasi user
     const userCheck = await pool.query('SELECT 1 FROM sigab_app.user_app WHERE id_user = $1', [id_user]);
     if (userCheck.rowCount === 0) {
       return res.status(400).json({
@@ -31,15 +51,10 @@ exports.createReport = async (req, res) => {
       });
     }
 
-    // Extract coordinates from the lokasi string "(longitude,latitude)"
-    let longitude, latitude;
-    if (lokasi) {
-      // Remove parentheses and split by comma
-      const coords = lokasi.replace(/[()]/g, '').split(',');
-      longitude = parseFloat(coords[0]);
-      latitude = parseFloat(coords[1]);
-
-      if (isNaN(longitude) || isNaN(latitude)) {
+    // Validasi titik format (opsional)
+    if (titik_lokasi) {
+      const match = titik_lokasi.match(/^\((-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)\)$/);
+      if (!match) {
         return res.status(400).json({
           status: 'error',
           message: 'Format koordinat tidak valid. Gunakan format "(longitude,latitude)"'
@@ -47,17 +62,19 @@ exports.createReport = async (req, res) => {
       }
     }
 
-    // Query untuk insert laporan baru ke database
+    // Insert laporan
     const result = await pool.query(
-      `INSERT INTO sigab_app."laporan" (id_user, tipe_laporan, lokasi, waktu, deskripsi, status, foto, created_at, updated_at) 
-      VALUES ($1, $2, point($3, $4), $5, $6, $7, $8, NOW(), NOW()) RETURNING id_laporan`,
-      [id_user, tipe_laporan, longitude, latitude, waktu, deskripsi, status, foto]
+      `INSERT INTO sigab_app.laporan 
+      (id_user, tipe_laporan, waktu, deskripsi, status, foto, created_at, updated_at, lokasi, titik_lokasi) 
+      VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), $7, $8)
+      RETURNING id_laporan`,
+      [id_user, tipe_laporan, waktu, deskripsi, status, foto, lokasi, titik_lokasi]
     );
 
     res.status(201).json({
       status: 'success',
       message: 'Laporan berhasil dibuat',
-      data: { 
+      data: {
         id_laporan: result.rows[0].id_laporan,
         foto_url: foto
       }
@@ -70,4 +87,3 @@ exports.createReport = async (req, res) => {
     });
   }
 };
-

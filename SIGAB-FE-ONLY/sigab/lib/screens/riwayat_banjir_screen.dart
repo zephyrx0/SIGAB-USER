@@ -222,10 +222,10 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 40,
-                    ),
+                    // Image.asset(
+                    //   'assets/images/logo.png',
+                    //   height: 40,
+                    // ),
                     const SizedBox(width: 12),
                     const Text(
                       'Riwayat Banjir',

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:sigab/api_service.dart';
+import 'package:camera/camera.dart';
 import 'dart:io';
 import 'detail_laporan_infrastruktur_screen.dart';
 
@@ -14,15 +15,46 @@ class LaporanInfrastrukturScreen extends StatefulWidget {
 }
 
 class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen> {
-  File? _image;
+  CameraController? _cameraController;
   String? _currentAddress;
-  final ImagePicker _picker = ImagePicker();
+  bool _isCameraInitialized = false;
+  List<CameraDescription>? cameras;
 
   @override
   void initState() {
     super.initState();
     _checkToken();
     _getCurrentLocation();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      cameras = await availableCameras();
+      if (cameras != null && cameras!.isNotEmpty) {
+        _cameraController = CameraController(
+          cameras![0],
+          ResolutionPreset.high,
+          enableAudio: false,
+        );
+
+        await _cameraController!.initialize();
+        
+        if (mounted) {
+          setState(() {
+            _isCameraInitialized = true;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error initializing camera: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    super.dispose();
   }
 
   Future<void> _checkToken() async {
@@ -64,19 +96,39 @@ class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen>
     }
   }
 
-  void _takePicture() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DetailLaporanInfrastrukturScreen(
-          location: _currentAddress ?? '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
+  Future<void> _takePicture() async {
+    if (!_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    try {
+      final XFile photo = await _cameraController!.takePicture();
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailLaporanInfrastrukturScreen(
+            location: _currentAddress ?? '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
+            imagePath: photo.path,
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      print('Error taking picture: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_isCameraInitialized || _cameraController == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -105,21 +157,20 @@ class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen>
             ),
             child: Stack(
               children: [
-                if (_image != null)
+                if (_isCameraInitialized)
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      _image!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+                    child: CameraPreview(_cameraController!),
+                  )
+                else
+                  const Center(
+                    child: CircularProgressIndicator(),
                   ),
                 Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.white.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     padding: const EdgeInsets.all(12),
@@ -136,9 +187,9 @@ class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen>
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
-                          style: TextStyle(
+                        Text(
+                          _currentAddress ?? '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontFamily: 'Poppins',
                           ),

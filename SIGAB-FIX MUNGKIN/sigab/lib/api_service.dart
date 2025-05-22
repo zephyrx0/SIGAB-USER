@@ -4,9 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   /// URL dasar untuk API endpoint
-  static const String baseUrl = 'http://localhost:3000/api';  // Ubah menjadi base API saja
-  static const String userUrl = '$baseUrl/users';  // Tambah endpoint khusus user
-  static const String appUrl = '$baseUrl/app';     // Tambah endpoint khusus app
+  static const String baseUrl =
+      // 'https://e686-36-69-143-197.ngrok-free.app/api'; // Ubah menjadi base API saja
+      'http://localhost:3000/api'; // Ubah menjadi base API saja
+  static const String userUrl = '$baseUrl/users'; // Tambah endpoint khusus user
+  static const String appUrl = '$baseUrl/app'; // Tambah endpoint khusus app
 
   /// Fungsi untuk mendapatkan token dari penyimpanan lokal
   static Future<String?> getToken() async {
@@ -38,7 +40,8 @@ class ApiService {
   }
 
   /// Fungsi untuk mendaftarkan pengguna baru
-  static Future<void> registerUser(String nomorWa, String password, String nama) async {
+  static Future<void> registerUser(
+      String nomorWa, String password, String nama) async {
     try {
       final response = await http.post(
         Uri.parse('$userUrl/register'),
@@ -66,10 +69,11 @@ class ApiService {
   }
 
   /// Fungsi untuk melakukan login pengguna
-  static Future<Map<String, dynamic>> login(String nomorWa, String password) async {
+  static Future<Map<String, dynamic>> login(
+      String nomorWa, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$userUrl/login'),  // Gunakan userUrl
+        Uri.parse('$userUrl/login'), // Gunakan userUrl
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'nomor_wa': nomorWa,
@@ -107,7 +111,7 @@ class ApiService {
       }
 
       final response = await http.post(
-        Uri.parse('$userUrl/logout'),  // Gunakan userUrl
+        Uri.parse('$userUrl/logout'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -122,7 +126,6 @@ class ApiService {
         throw data['message'] ?? 'Logout gagal';
       }
     } catch (e) {
-      // Tetap hapus token meskipun terjadi error
       await removeToken();
       if (e is String) {
         throw e;
@@ -134,20 +137,15 @@ class ApiService {
   /// Fungsi untuk mendapatkan data cuaca
   static Future<Map<String, dynamic>> getWeather() async {
     try {
-      final token = await getToken();
-      if (token == null) throw Exception('Token tidak ditemukan');
-
       final response = await http.get(
-        Uri.parse('$appUrl/cuaca'),  // Pindah ke appUrl karena ini data aplikasi
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        Uri.parse('$appUrl/cuaca'), // Pindah ke appUrl karena ini data aplikasi
+        headers: {'Content-Type': 'application/json'},
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
+        print('Weather response: ${response.body}');
         return data;
       } else {
         throw data['message'] ?? 'Gagal mengambil data cuaca';
@@ -163,14 +161,10 @@ class ApiService {
   /// Fungsi untuk mendapatkan data banjir
   static Future<Map<String, dynamic>> getFloodData() async {
     try {
-      final token = await getToken();
-      if (token == null) throw Exception('Token tidak ditemukan');
-
       final response = await http.get(
-        Uri.parse('$appUrl/informasi-banjir'),  // Pindah ke appUrl karena ini data aplikasi
+        Uri.parse('$appUrl/informasi-banjir'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
         },
       );
 
@@ -180,6 +174,31 @@ class ApiService {
         return data;
       } else {
         throw data['message'] ?? 'Gagal mengambil data banjir';
+      }
+    } catch (e) {
+      if (e is String) {
+        throw e;
+      }
+      throw e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  /// Fungsi untuk mendapatkan data riwayat banjir
+  static Future<List<dynamic>> getRiwayatBanjir() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$appUrl/riwayat-banjir'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['data'] as List<dynamic>;
+      } else {
+        throw data['message'] ?? 'Gagal mengambil data riwayat banjir';
       }
     } catch (e) {
       if (e is String) {
@@ -219,13 +238,14 @@ class ApiService {
     required String waktu,
     required String deskripsi,
     required String foto,
+    required String titikLokasi, // Tambahkan parameter baru
   }) async {
     try {
       final token = await getToken();
       if (token == null) throw Exception('Token tidak ditemukan');
 
       final response = await http.post(
-        Uri.parse('$baseUrl/laporan'),
+        Uri.parse('$appUrl/laporan'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -236,8 +256,8 @@ class ApiService {
           'lokasi': lokasi,
           'waktu': waktu,
           'deskripsi': deskripsi,
-          'status': 'Menunggu',
           'foto': foto,
+          'titik_lokasi': titikLokasi, // Tambahkan titik lokasi ke body request
         }),
       );
 
@@ -259,7 +279,7 @@ class ApiService {
       if (token == null) throw Exception('Token tidak ditemukan');
 
       final response = await http.get(
-        Uri.parse('$userUrl/profile'),  // Gunakan userUrl
+        Uri.parse('$userUrl/profile'), // Gunakan userUrl
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -288,7 +308,7 @@ class ApiService {
       if (token == null) throw Exception('Token tidak ditemukan');
 
       final response = await http.put(
-        Uri.parse('$userUrl/profile'),  // Gunakan userUrl
+        Uri.parse('$userUrl/profile'), // Gunakan userUrl
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -315,13 +335,14 @@ class ApiService {
   static Future<Map<String, dynamic>> changePassword({
     required String oldPassword,
     required String newPassword,
+    required String confirmNewPassword,
   }) async {
     try {
       final token = await getToken();
       if (token == null) throw Exception('Token tidak ditemukan');
 
       final response = await http.put(
-        Uri.parse('$userUrl/password'),  // Gunakan userUrl
+        Uri.parse('$userUrl/password'), // Gunakan userUrl
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -329,6 +350,7 @@ class ApiService {
         body: jsonEncode({
           'old_password': oldPassword,
           'new_password': newPassword,
+          'confirm_new_password': confirmNewPassword,
         }),
       );
 
@@ -345,10 +367,11 @@ class ApiService {
   }
 
   /// Fungsi untuk request reset password
-  static Future<Map<String, dynamic>> requestResetPassword(String nomorWa) async {
+  static Future<Map<String, dynamic>> requestResetPassword(
+      String nomorWa) async {
     try {
       final response = await http.post(
-        Uri.parse('$userUrl/forgot-password'),  // Gunakan userUrl
+        Uri.parse('$userUrl/forgot-password'), // Gunakan userUrl
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'nomor_wa': nomorWa,
@@ -375,7 +398,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$userUrl/reset-password'),  // Gunakan userUrl
+        Uri.parse('$userUrl/reset-password'), // Gunakan userUrl
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'nomor_wa': nomorWa,
@@ -395,7 +418,37 @@ class ApiService {
       throw e.toString().replaceAll('Exception: ', '');
     }
   }
+
+  /// Fungsi untuk mendapatkan data tempat evakuasi
+  static Future<Map<String, dynamic>> getEvacuationPlaces() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$appUrl/tempat-evakuasi'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw data['message'] ?? 'Gagal mengambil data tempat evakuasi';
+      }
+    } catch (e) {
+      if (e is String) {
+        throw e;
+      }
+      throw e.toString().replaceAll('Exception: ', '');
+    }
+  }
 }
+
+// Hapus variabel global ini karena seharusnya berada dalam state widget
+// bool _isLoading = true;
+// String _error = '';
+// Map<String, dynamic>? _floodData;
 
 // Hapus variabel global ini karena seharusnya berada dalam state widget
 // bool _isLoading = true;
