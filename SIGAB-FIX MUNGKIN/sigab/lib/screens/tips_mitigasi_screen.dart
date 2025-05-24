@@ -97,15 +97,14 @@ class TipsMitigasiScreen extends StatelessWidget {
       List<TipsMitigasiItem> tips, BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => DetailTipsMitigasiScreen(
-              title: title,
-              imagePath: imagePath,
-              tipsList: tips,
-            ),
-          ),
+          '/detail-tips-mitigasi',
+          arguments: {
+            'title': title,
+            'imagePath': imagePath,
+            'tipsList': tips,
+          },
         );
       },
       child: Container(
@@ -175,6 +174,7 @@ class TipsMitigasiScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
           'Tips Mitigasi',
           style: TextStyle(
@@ -183,148 +183,44 @@ class TipsMitigasiScreen extends StatelessWidget {
             fontFamily: 'Poppins',
           ),
         ),
-        centerTitle: true,
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              _buildTipsCard(
-                'Tips Mitigasi Bencana Banjir',
-                'assets/images/m_banjir.jpeg',
-                _getBanjirTips(),
-                context,
-              ),
-              _buildTipsCard(
-                'Tips Mitigasi Gempa Bumi',
-                'assets/images/m_gempa.jpeg',
-                _getGempaTips(),
-                context,
-              ),
-              _buildTipsCard(
-                'Tips Menghadapi Cuaca Ekstrem',
-                'assets/images/m_cuaca_ekstrem.jpeg',
-                _getCuacaEkstremTips(),
-                context,
-              ),
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
-      bottomNavigationBar: Theme(
-        data: ThemeData(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: 4,
-          onTap: (index) {
-            if (index != 4) {
-              Navigator.pop(context);
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF016FB9),
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          selectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTipsCard(
+                  'Tips Mitigasi Bencana Banjir',
+                  'assets/images/m_banjir.jpeg',
+                  _getBanjirTips(),
+                  context,
+                ),
+                _buildTipsCard(
+                  'Tips Mitigasi Gempa Bumi',
+                  'assets/images/m_gempa.jpeg',
+                  _getGempaTips(),
+                  context,
+                ),
+                _buildTipsCard(
+                  'Tips Menghadapi Cuaca Ekstrem',
+                  'assets/images/m_cuaca_ekstrem.jpeg',
+                  _getCuacaEkstremTips(),
+                  context,
+                ),
+              ],
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-          ),
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.wb_sunny_outlined),
-              activeIcon: Icon(Icons.wb_sunny),
-              label: 'Cuaca',
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              label: 'Lapor',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 24,
-                height: 24,
-                child: CustomPaint(
-                  painter: WavePainter(
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              label: 'Banjir',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.menu),
-              label: 'Lainnya',
-            ),
-          ],
         ),
       ),
     );
   }
-}
-
-class WavePainter extends CustomPainter {
-  final Color color;
-
-  WavePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    final path = Path();
-    path.moveTo(0, size.height * 0.5);
-
-    // First wave
-    path.cubicTo(
-      size.width * 0.25,
-      size.height * 0.25,
-      size.width * 0.25,
-      size.height * 0.75,
-      size.width * 0.5,
-      size.height * 0.5,
-    );
-
-    // Second wave
-    path.cubicTo(
-      size.width * 0.75,
-      size.height * 0.25,
-      size.width * 0.75,
-      size.height * 0.75,
-      size.width,
-      size.height * 0.5,
-    );
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

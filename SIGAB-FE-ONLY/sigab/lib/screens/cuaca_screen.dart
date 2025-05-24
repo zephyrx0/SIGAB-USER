@@ -87,24 +87,30 @@ class CuacaScreen extends StatelessWidget {
   }
 
   Widget _buildWeatherInfo(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          '$label: $value',
-          style: const TextStyle(
+    return Expanded(
+      child: Row(
+        children: [
+          Icon(
+            icon,
             color: Colors.white,
-            fontSize: 14,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w500,
+            size: 20,
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$label: $value',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -299,33 +305,34 @@ class CuacaScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'Cuaca',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                const Center(
+                  child: Text(
+                    'Cuaca',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildCurrentWeather(),
-              const SizedBox(height: 16),
-              _buildWarningCard(),
-              const SizedBox(height: 24),
-              _buildHourlyForecast(),
-              const SizedBox(height: 24),
-              _buildDailyForecast(),
-            ],
+                const SizedBox(height: 16),
+                _buildCurrentWeather(),
+                const SizedBox(height: 16),
+                _buildWarningCard(),
+                const SizedBox(height: 24),
+                _buildHourlyForecast(),
+                const SizedBox(height: 24),
+                _buildDailyForecast(),
+              ],
+            ),
           ),
         ),
       ),

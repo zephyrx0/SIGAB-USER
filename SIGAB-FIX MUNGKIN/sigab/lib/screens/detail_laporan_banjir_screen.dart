@@ -6,6 +6,7 @@ import '../api_service.dart';
 import './home_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'main_screen.dart';
 
 class DetailLaporanBanjirScreen extends StatefulWidget {
   final String location;
@@ -100,7 +101,7 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
                   onPressed: () {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
+                        builder: (context) => const MainScreen(),
                       ),
                       (route) => false,
                     );
@@ -117,13 +118,15 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
   Future<void> _submitLaporan() async {
     if (_currentLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mohon tunggu, sedang mendapatkan lokasi...')),
+        const SnackBar(
+            content: Text('Mohon tunggu, sedang mendapatkan lokasi...')),
       );
       await _getCurrentLocation(); // Coba dapatkan lokasi lagi
       if (_currentLocation == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mendapatkan lokasi. Mohon cek izin lokasi')),
+          const SnackBar(
+              content: Text('Gagal mendapatkan lokasi. Mohon cek izin lokasi')),
         );
         return;
       }
@@ -147,7 +150,68 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
       final now = DateTime.now();
       final waktu = now.toIso8601String();
 
-      print('Lokasi saat submit: ${_currentLocation?.latitude}, ${_currentLocation?.longitude}'); // Tambahkan log
+      print(
+          'Lokasi saat submit: ${_currentLocation?.latitude}, ${_currentLocation?.longitude}'); // Tambahkan log
+
+      // Baca bytes dari file foto
+      Uint8List? fotoBytes;
+      String? filename;
+
+      if (widget.imagePath.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Path foto tidak tersedia.')),
+        );
+        setState(() {
+          _isSubmitting = false;
+        });
+        return; // Stop submission if imagePath is not available
+      }
+
+      if (!kIsWeb) {
+        // Untuk mobile/desktop, baca dari File path menggunakan dart:io
+        try {
+          final File imageFile = File(widget.imagePath);
+          if (await imageFile.exists()) {
+            fotoBytes = await imageFile.readAsBytes();
+            filename =
+                imageFile.path.split('/').last; // Ambil nama file dari path
+          } else {
+            throw Exception('File not found at path: ${widget.imagePath}');
+          }
+        } catch (e) {
+          print('Error reading image file: $e');
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Gagal membaca file foto: ${e.toString()}')),
+          );
+          setState(() {
+            _isSubmitting = false;
+          });
+          return; // Stop submission if file reading fails
+        }
+      } else {
+        // Untuk web, widget.imagePath kemungkinan adalah path sementara atau identifier dari file picker
+        print(
+            'WARNING: File upload on web is not fully implemented. Skipping file upload.');
+        // For web, we might need a different approach if foto is required.
+        // If foto is always required by backend, web upload must be implemented.
+        // For now, if web upload is not implemented and foto is required, we should prevent submission.
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Unggah foto dari web belum diimplementasikan.')),
+        );
+        setState(() {
+          _isSubmitting = false;
+        });
+        return; // Stop submission if web upload is not implemented and foto is required
+      }
+
+      // Add logging before submission
+      print('Debug: imagePath: ${widget.imagePath}');
+      print('Debug: fotoBytes is null: ${fotoBytes == null}');
+      print('Debug: filename: $filename');
 
       await ApiService.submitLaporan(
         idUser: userId,
@@ -155,10 +219,11 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
         lokasi: widget.location,
         waktu: waktu,
         deskripsi: _descriptionController.text,
-        foto: widget.imagePath,
-        titikLokasi: _currentLocation != null 
-          ? '(${_currentLocation!.longitude},${_currentLocation!.latitude})'
-          : '(0,0)',
+        fotoBytes: fotoBytes,
+        filename: filename,
+        titikLokasi: _currentLocation != null
+            ? '(${_currentLocation!.longitude},${_currentLocation!.latitude})'
+            : '(0,0)',
       );
 
       if (!mounted) return;
@@ -191,15 +256,14 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
           throw Exception('Izin lokasi ditolak');
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         throw Exception('Izin lokasi ditolak secara permanen');
       }
 
       // Dapatkan posisi
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high
-      );
+          desiredAccuracy: LocationAccuracy.high);
 
       print('Posisi didapat: ${position.latitude}, ${position.longitude}');
 
@@ -211,9 +275,7 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
       try {
         // Dapatkan alamat dari koordinat dalam blok try terpisah
         List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude
-        );
+            position.latitude, position.longitude);
 
         if (!mounted) return;
 
@@ -223,7 +285,7 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
             final street = placemark.street ?? '';
             final subLocality = placemark.subLocality ?? '';
             final locality = placemark.locality ?? '';
-            
+
             _currentAddress = [street, subLocality, locality]
                 .where((e) => e.isNotEmpty)
                 .join(', ');
@@ -238,7 +300,6 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
           _isLoadingLocation = false;
         });
       }
-
     } catch (e) {
       print('Error mendapatkan lokasi: $e');
       if (!mounted) return;
@@ -275,8 +336,6 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
           child: Column(
             children: [
               Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.width * 4 / 3,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
@@ -305,9 +364,9 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _isLoadingLocation 
-                                ? 'Mendapatkan lokasi...'
-                                : _currentAddress ?? widget.location,
+                              _isLoadingLocation
+                                  ? 'Mendapatkan lokasi...'
+                                  : _currentAddress ?? widget.location,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontFamily: 'Poppins',
@@ -316,43 +375,47 @@ class _DetailLaporanBanjirScreenState extends State<DetailLaporanBanjirScreen> {
                             const SizedBox(height: 8),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: kIsWeb 
-                                ? Image.network(
-                                    widget.imagePath,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: MediaQuery.of(context).size.width * 0.6,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: MediaQuery.of(context).size.width * 0.6,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.error_outline,
-                                          color: Colors.red,
-                                          size: 48,
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Image.file(
-                                    File(widget.imagePath),
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: MediaQuery.of(context).size.width * 0.6,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: MediaQuery.of(context).size.width * 0.6,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.error_outline,
-                                          color: Colors.red,
-                                          size: 48,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                              child: kIsWeb
+                                  ? Image.network(
+                                      widget.imagePath,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 48,
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : Image.file(
+                                      File(widget.imagePath),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 48,
+                                          ),
+                                        );
+                                      },
+                                    ),
                             ),
                           ],
                         ),

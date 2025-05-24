@@ -12,19 +12,22 @@ class RegistrationScreen extends StatefulWidget {
 class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
-  final TextEditingController _nameController = TextEditingController();  // Tambahkan ini
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isLoading = false;
 
   Future<void> _handleRegister() async {
-    if (_nameController.text.isEmpty || _phoneController.text.isEmpty || 
-        _passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+    if (_nameController.text.isEmpty ||
+        _phoneController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Semua field harus diisi', 
-            style: TextStyle(fontFamily: 'Poppins')),
+          content: Text('Semua field harus diisi',
+              style: TextStyle(fontFamily: 'Poppins')),
           backgroundColor: Colors.red,
         ),
       );
@@ -35,7 +38,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password dan konfirmasi password tidak cocok',
-            style: TextStyle(fontFamily: 'Poppins')),
+              style: TextStyle(fontFamily: 'Poppins')),
           backgroundColor: Colors.red,
         ),
       );
@@ -55,7 +58,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       await ApiService.registerUser(
         phoneNumber,
         _passwordController.text,
-        _nameController.text,  // Gunakan nama yang diinput
+        _nameController.text,
       );
 
       if (!mounted) return;
@@ -73,11 +76,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString(),
-            style: const TextStyle(fontFamily: 'Poppins')),
+          content:
+              Text(e.toString(), style: const TextStyle(fontFamily: 'Poppins')),
           backgroundColor: Colors.red,
         ),
       );
@@ -185,6 +188,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                         const SizedBox(height: 20),
                         const Text(
+                          'Nama',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: TextField(
+                            controller: _nameController,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w400,
+                            ),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
                           'Nomor WhatsApp',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
@@ -235,32 +265,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          'Nama',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: TextField(
-                            controller: _nameController,
-                            style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w400,
-                            ),
-                            decoration: const InputDecoration(
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -348,7 +352,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         ),
                         const SizedBox(height: 30),
                         ElevatedButton(
-                          onPressed: _isLoading ? null : _handleRegister, // Ubah ini
+                          onPressed: _isLoading ? null : _handleRegister,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                             padding: const EdgeInsets.symmetric(vertical: 15),
@@ -362,7 +366,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
                                   ),
                                 )
                               : const Text(
@@ -376,8 +381,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 ),
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
                           children: [
                             const Text(
                               'Sudah mendaftar sebagai pengguna? ',
@@ -417,7 +422,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();  // Tambahkan ini
+    _nameController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();

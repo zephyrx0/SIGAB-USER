@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_map/flutter_map.dart';
-import 'dart:ui' show Path;
-import 'riwayat_banjir_screen.dart';
 
 class DetailRiwayatBanjirScreen extends StatelessWidget {
   final String date;
@@ -169,26 +167,30 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
             children: [
               const Icon(Icons.flag, color: Colors.orange, size: 24),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Wilayah Banjir',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                      fontFamily: 'Poppins',
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Wilayah Banjir',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
-                  ),
-                  Text(
-                    location,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
+                    Text(
+                      location,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -285,8 +287,8 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: FlutterMap(
-                    options: MapOptions(
-                      center: const LatLng(-6.983004, 107.628411),
+                    options: const MapOptions(
+                      center: LatLng(-6.983004, 107.628411),
                       zoom: 14,
                       minZoom: 5,
                       maxZoom: 18,
@@ -299,14 +301,46 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
                       ),
                       MarkerLayer(
                         markers: [
-                          Marker(
-                            point: const LatLng(-6.983004, 107.628411),
+                          const Marker(
+                            point: LatLng(-6.983004, 107.628411),
                             width: 80,
                             height: 80,
-                            child: const Icon(
+                            child: Icon(
                               Icons.location_on,
                               color: Colors.red,
                               size: 40,
+                            ),
+                          ),
+                          Marker(
+                            point: const LatLng(-6.976486, 107.633163),
+                            width: 40,
+                            height: 40,
+                            child: Stack(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color:
+                                        const Color.fromARGB(255, 70, 244, 54)
+                                            .withOpacity(0.3),
+                                  ),
+                                ),
+                                Center(
+                                  child: Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color.fromARGB(255, 86, 244, 54),
+                                    ),
+                                    child: const Icon(
+                                      Icons.water,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -361,7 +395,7 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
             BottomNavigationBarItem(
               icon: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.blue,
                   shape: BoxShape.circle,
                 ),

@@ -93,22 +93,12 @@ class LainnyaScreen extends StatelessWidget {
               _buildImageCard(
                 'Tempat Evakuasi',
                 'assets/images/tempat_evakuasi.jpg',
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TempatEvakuasiScreen(),
-                  ),
-                ),
+                () => Navigator.pushNamed(context, '/tempat-evakuasi'),
               ),
               _buildImageCard(
                 'Tips Mitigasi',
                 'assets/images/tips_mitigasi.jpeg',
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TipsMitigasiScreen(),
-                  ),
-                ),
+                () => Navigator.pushNamed(context, '/tips-mitigasi'),
               ),
               const SizedBox(height: 150),
               Padding(

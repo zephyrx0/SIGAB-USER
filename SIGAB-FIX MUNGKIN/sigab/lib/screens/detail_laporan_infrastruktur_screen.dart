@@ -3,18 +3,24 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../api_service.dart';
-import './home_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'main_screen.dart';
+// Import Uint8List
 
 class DetailLaporanInfrastrukturScreen extends StatefulWidget {
   final String location;
-  final String imagePath;
+  final Uint8List? photoBytes;
+  final String? photoFilename;
+  final String? imagePath;
 
   const DetailLaporanInfrastrukturScreen({
     super.key,
     required this.location,
-    required this.imagePath,
+    this.photoBytes,
+    this.photoFilename,
+    this.imagePath,
   });
 
   @override
@@ -22,7 +28,8 @@ class DetailLaporanInfrastrukturScreen extends StatefulWidget {
       _DetailLaporanInfrastrukturScreenState();
 }
 
-class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastrukturScreen> {
+class _DetailLaporanInfrastrukturScreenState
+    extends State<DetailLaporanInfrastrukturScreen> {
   Position? _currentLocation;
   String? _currentAddress;
   bool _isLoadingLocation = false;
@@ -98,10 +105,9 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
                     ),
                   ),
                   onPressed: () {
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/',
                       (route) => false,
                     );
                   },
@@ -114,24 +120,10 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
     );
   }
 
-  Future<void> _submitLaporan() async {
-    if (_currentLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mohon tunggu, sedang mendapatkan lokasi...')),
-      );
-      await _getCurrentLocation();
-      if (_currentLocation == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal mendapatkan lokasi. Mohon cek izin lokasi')),
-        );
-        return;
-      }
-    }
-
+  Future<void> _submitReport() async {
     if (_descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mohon isi deskripsi laporan')),
+        const SnackBar(content: Text('Deskripsi tidak boleh kosong')),
       );
       return;
     }
@@ -141,29 +133,48 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
     });
 
     try {
-      final userId = await ApiService.getUserIdFromToken();
-      if (userId == null) throw Exception('User ID tidak ditemukan');
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id');
+      if (userId == null) {
+        throw Exception('User ID tidak ditemukan');
+      }
 
+      // Get current time in ISO 8601 format
       final now = DateTime.now();
       final waktu = now.toIso8601String();
 
-      print('Lokasi saat submit: ${_currentLocation?.latitude}, ${_currentLocation?.longitude}');
+      // Read image file
+      if (widget.imagePath == null) {
+        throw Exception('Image path is null');
+      }
+      final file = File(widget.imagePath!);
+      final fotoBytes = await file.readAsBytes();
+      final filename = widget.imagePath!.split('/').last;
 
-      await ApiService.submitLaporan(
+      final response = await ApiService.submitLaporan(
         idUser: userId,
-        tipeLaporan: 'Infrastruktur',
+        tipeLaporan: 'Infrastruktur', // Set tipe laporan ke Infrastruktur
         lokasi: widget.location,
+        titikLokasi:
+            '(${_currentLocation!.longitude},${_currentLocation!.latitude})',
         waktu: waktu,
         deskripsi: _descriptionController.text,
-        foto: widget.imagePath,
-        titikLokasi: _currentLocation != null 
-          ? '(${_currentLocation!.longitude},${_currentLocation!.latitude})'
-          : '(0,0)',
+        fotoBytes: fotoBytes,
+        filename: filename,
       );
 
       if (!mounted) return;
-      _showSuccessDialog();
+
+      if (response['status'] == 'success') {
+        _showSuccessDialog();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(response['message'] ?? 'Gagal mengirim laporan')),
+        );
+      }
     } catch (e) {
+      print('Error submitting report: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
@@ -190,14 +201,13 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
           throw Exception('Izin lokasi ditolak');
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
         throw Exception('Izin lokasi ditolak secara permanen');
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high
-      );
+          desiredAccuracy: LocationAccuracy.high);
 
       print('Posisi didapat: ${position.latitude}, ${position.longitude}');
 
@@ -207,9 +217,7 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
 
       try {
         List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude
-        );
+            position.latitude, position.longitude);
 
         if (!mounted) return;
 
@@ -219,7 +227,7 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
             final street = placemark.street ?? '';
             final subLocality = placemark.subLocality ?? '';
             final locality = placemark.locality ?? '';
-            
+
             _currentAddress = [street, subLocality, locality]
                 .where((e) => e.isNotEmpty)
                 .join(', ');
@@ -233,7 +241,6 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
           _isLoadingLocation = false;
         });
       }
-
     } catch (e) {
       print('Error mendapatkan lokasi: $e');
       if (!mounted) return;
@@ -270,8 +277,6 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
           child: Column(
             children: [
               Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.width * 4 / 3,
                 decoration: BoxDecoration(
                   color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(12),
@@ -300,9 +305,9 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              _isLoadingLocation 
-                                ? 'Mendapatkan lokasi...'
-                                : _currentAddress ?? widget.location,
+                              _isLoadingLocation
+                                  ? 'Mendapatkan lokasi...'
+                                  : _currentAddress ?? widget.location,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontFamily: 'Poppins',
@@ -311,43 +316,47 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
                             const SizedBox(height: 8),
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: kIsWeb 
-                                ? Image.network(
-                                    widget.imagePath,
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: MediaQuery.of(context).size.width * 0.6,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: MediaQuery.of(context).size.width * 0.6,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.error_outline,
-                                          color: Colors.red,
-                                          size: 48,
-                                        ),
-                                      );
-                                    },
-                                  )
-                                : Image.file(
-                                    File(widget.imagePath),
-                                    fit: BoxFit.cover,
-                                    width: double.infinity,
-                                    height: MediaQuery.of(context).size.width * 0.6,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: MediaQuery.of(context).size.width * 0.6,
-                                        color: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.error_outline,
-                                          color: Colors.red,
-                                          size: 48,
-                                        ),
-                                      );
-                                    },
-                                  ),
+                              child: kIsWeb
+                                  ? Image.network(
+                                      widget.imagePath!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 48,
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : Image.file(
+                                      File(widget.imagePath!),
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                          width: double.infinity,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.6,
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.error_outline,
+                                            color: Colors.red,
+                                            size: 48,
+                                          ),
+                                        );
+                                      },
+                                    ),
                             ),
                           ],
                         ),
@@ -375,7 +384,8 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFF2196F3)),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: TextField(
                   controller: _descriptionController,
                   maxLines: 5,
@@ -400,7 +410,7 @@ class _DetailLaporanInfrastrukturScreenState extends State<DetailLaporanInfrastr
                   color: Colors.transparent,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
-                    onTap: _isSubmitting ? null : _submitLaporan,
+                    onTap: _isSubmitting ? null : _submitReport,
                     child: Center(
                       child: _isSubmitting
                           ? const CircularProgressIndicator(color: Colors.white)

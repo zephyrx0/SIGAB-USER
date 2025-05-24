@@ -32,9 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final token = await ApiService.getToken();
       if (!mounted) return;
-      
+
       if (token != null && token.isNotEmpty) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
       }
     } catch (e) {
       // Token tidak ada atau tidak valid, biarkan user di halaman login
@@ -71,13 +71,14 @@ class _LoginScreenState extends State<LoginScreen> {
           message: 'Berhasil masuk',
           onOkPressed: () {
             Navigator.pop(context); // Close dialog
-            Navigator.pushReplacementNamed(context, '/home'); // Navigate to home screen
+            Navigator.pushReplacementNamed(
+                context, '/'); // Navigate to home screen
           },
         ),
       );
     } catch (e) {
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -284,22 +285,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/forgot-password');
-                            },
-                            child: const Text(
-                              'Lupa Password?',
-                              style: TextStyle(
-                                color: Color(0xFF2C79C1),
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ),
                         const SizedBox(height: 30),
                         ElevatedButton(
                           onPressed: _isLoading ? null : _handleLogin,
@@ -316,7 +301,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
                                   ),
                                 )
                               : const Text(
@@ -330,8 +316,36 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        // Masuk Tanpa Akun button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              // Navigate to home screen without account
+                              Navigator.pushReplacementNamed(context, '/');
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              side: const BorderSide(color: Color(0xFFFFA726)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Masuk Tanpa Akun',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Poppins',
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          alignment: WrapAlignment.center,
                           children: [
                             const Text(
                               'Belum mendaftar sebagai pengguna? ',

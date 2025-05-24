@@ -1,2 +1,0 @@
-D:/Jeisus/Semester 8/SIGAB/SIGAB-LILIN/SIGAB-FIX MUNGKIN/sigab/android/app/.cxx/Debug/5m2fu94t/x86_64/CMakeFiles/edit_cache.dir
-D:/Jeisus/Semester 8/SIGAB/SIGAB-LILIN/SIGAB-FIX MUNGKIN/sigab/android/app/.cxx/Debug/5m2fu94t/x86_64/CMakeFiles/rebuild_cache.dir

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_map/flutter_map.dart';
-import 'dart:ui' show Path;
 
 class BuatLaporanScreen extends StatefulWidget {
   const BuatLaporanScreen({super.key});
@@ -199,8 +198,8 @@ class _BuatLaporanScreenState extends State<BuatLaporanScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: FlutterMap(
-                    options: MapOptions(
-                      center: const LatLng(-6.905977, 107.613144),
+                    options: const MapOptions(
+                      center: LatLng(-6.905977, 107.613144),
                       zoom: 14,
                       minZoom: 5,
                       maxZoom: 18,
@@ -211,13 +210,13 @@ class _BuatLaporanScreenState extends State<BuatLaporanScreen> {
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.sigab.app',
                       ),
-                      MarkerLayer(
+                      const MarkerLayer(
                         markers: [
                           Marker(
-                            point: const LatLng(-6.905977, 107.613144),
+                            point: LatLng(-6.905977, 107.613144),
                             width: 80,
                             height: 80,
-                            child: const Icon(
+                            child: Icon(
                               Icons.location_on,
                               color: Colors.red,
                               size: 40,

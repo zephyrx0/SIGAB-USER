@@ -9,7 +9,7 @@ class RiwayatBanjirScreen extends StatefulWidget {
 }
 
 class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
-  bool _isBanjirTerkini = false;
+  final bool _isBanjirTerkini = false;
 
   Widget _buildFloodCard({
     required String date,
@@ -19,192 +19,164 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
     required Color statusColor,
     required String status,
   }) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DetailRiwayatBanjirScreen(
-              date: date,
-              time: time,
-              location: location,
-              depth: depth,
-              statusColor: statusColor,
-              status: status,
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      elevation: 2,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailRiwayatBanjirScreen(
+                date: date,
+                time: time,
+                location: location,
+                depth: depth,
+                statusColor: statusColor,
+                status: status,
+              ),
             ),
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(13),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.location_on_outlined,
-                    size: 20, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  'Citeureup (0.07 LS, 109.37 BT)',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontFamily: 'Poppins',
+          );
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined,
+                      size: 20, color: Colors.grey),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Citeureup (0.07 LS, 109.37 BT)',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontFamily: 'Poppins',
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                const Icon(Icons.share, size: 20),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
+                  const Icon(Icons.share, size: 20),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Banjir',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$date, $time WIB',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Kedalaman Banjir: $status',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.swap_horiz, color: Colors.orange, size: 24),
+                  const SizedBox(width: 12),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Banjir',
+                      Text(
+                        'Jarak',
                         style: TextStyle(
-                          fontSize: 20,
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const Text(
+                        '10 Km dari lokasi anda',
+                        style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           fontFamily: 'Poppins',
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '$date, $time WIB',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          'Kedalaman Banjir: $status',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.height, color: Colors.orange, size: 24),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  const Icon(Icons.flag, color: Colors.orange, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Kedalaman Banjir',
+                          'Wilayah Banjir',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 12,
                             fontFamily: 'Poppins',
                           ),
-                          textAlign: TextAlign.center,
                         ),
                         Text(
-                          depth,
+                          location,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             fontFamily: 'Poppins',
                           ),
-                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.swap_horiz, color: Colors.orange, size: 24),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Jarak',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    const Text(
-                      '10 Km dari lokasi anda',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.flag, color: Colors.orange, size: 24),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Wilayah Banjir',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    Text(
-                      location,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -217,17 +189,13 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Image.asset(
-                    //   'assets/images/logo.png',
-                    //   height: 40,
-                    // ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(width: 12),
+                    Text(
                       'Riwayat Banjir',
                       style: TextStyle(
                         fontSize: 20,
@@ -369,7 +337,7 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
             BottomNavigationBarItem(
               icon: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.blue,
                   shape: BoxShape.circle,
                 ),

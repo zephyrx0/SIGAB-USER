@@ -252,7 +252,7 @@ class TipsMitigasiScreen extends StatelessWidget {
             BottomNavigationBarItem(
               icon: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.blue,
                   shape: BoxShape.circle,
                 ),

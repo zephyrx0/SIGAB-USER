@@ -112,11 +112,11 @@ class _LaporanBanjirScreenState extends State<LaporanBanjirScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     padding: const EdgeInsets.all(12),
-                    child: Column(
+                    child: const Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Lokasi',
                           style: TextStyle(
                             fontSize: 14,
@@ -124,8 +124,8 @@ class _LaporanBanjirScreenState extends State<LaporanBanjirScreen> {
                             fontFamily: 'Poppins',
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
+                        SizedBox(height: 4),
+                        Text(
                           '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
                           style: TextStyle(
                             fontSize: 12,

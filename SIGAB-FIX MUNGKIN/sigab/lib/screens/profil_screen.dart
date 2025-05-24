@@ -108,15 +108,15 @@ class _ProfilScreenState extends State<ProfilScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: isLoading
-                            ? CircularProgressIndicator()
+                            ? const CircularProgressIndicator()
                             : error != null
                                 ? Text(
                                     'Error: $error',
-                                    style: TextStyle(color: Colors.red),
+                                    style: const TextStyle(color: Colors.red),
                                   )
                                 : Text(
                                     nama ?? '-',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontFamily: 'Poppins',
                                     ),
@@ -145,10 +145,10 @@ class _ProfilScreenState extends State<ProfilScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: isLoading
-                  ? SizedBox.shrink()
+                  ? const SizedBox.shrink()
                   : Text(
                       nomorWa ?? '-',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontFamily: 'Poppins',
                       ),

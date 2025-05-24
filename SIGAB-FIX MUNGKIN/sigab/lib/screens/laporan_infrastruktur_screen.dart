@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:sigab/api_service.dart';
 import 'package:camera/camera.dart';
-import 'dart:io';
 import 'detail_laporan_infrastruktur_screen.dart';
 
 class LaporanInfrastrukturScreen extends StatefulWidget {
   const LaporanInfrastrukturScreen({super.key});
 
   @override
-  State<LaporanInfrastrukturScreen> createState() => _LaporanInfrastrukturScreenState();
+  State<LaporanInfrastrukturScreen> createState() =>
+      _LaporanInfrastrukturScreenState();
 }
 
-class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen> {
+class _LaporanInfrastrukturScreenState
+    extends State<LaporanInfrastrukturScreen> {
   CameraController? _cameraController;
   String? _currentAddress;
   bool _isCameraInitialized = false;
   List<CameraDescription>? cameras;
+  int _selectedCameraIndex = 0;
 
   @override
   void initState() {
@@ -33,13 +34,13 @@ class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen>
       cameras = await availableCameras();
       if (cameras != null && cameras!.isNotEmpty) {
         _cameraController = CameraController(
-          cameras![0],
+          cameras![_selectedCameraIndex],
           ResolutionPreset.high,
           enableAudio: false,
         );
 
         await _cameraController!.initialize();
-        
+
         if (mounted) {
           setState(() {
             _isCameraInitialized = true;
@@ -109,13 +110,39 @@ class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen>
         context,
         MaterialPageRoute(
           builder: (context) => DetailLaporanInfrastrukturScreen(
-            location: _currentAddress ?? '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
+            location: _currentAddress ??
+                '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
             imagePath: photo.path,
           ),
         ),
       );
     } catch (e) {
       print('Error taking picture: $e');
+    }
+  }
+
+  Future<void> _switchCamera() async {
+    if (cameras == null || cameras!.isEmpty) return;
+
+    _selectedCameraIndex = (_selectedCameraIndex + 1) % cameras!.length;
+
+    // Dispose of the current controller
+    await _cameraController?.dispose();
+
+    // Initialize the new controller
+    _cameraController = CameraController(
+      cameras![_selectedCameraIndex],
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+
+    try {
+      await _cameraController!.initialize();
+      if (mounted) {
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error initializing camera: $e');
     }
   }
 
@@ -127,104 +154,121 @@ class _LaporanInfrastrukturScreenState extends State<LaporanInfrastrukturScreen>
           child: CircularProgressIndicator(),
         ),
       );
-    }
-    
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          'Buat Laporan Kerusakan',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text(
+            'Buat Laporan Kerusakan',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Poppins',
+            ),
           ),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 0,
         ),
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-      ),
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.width * 4 / 3,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Stack(
-              children: [
-                if (_isCameraInitialized)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CameraPreview(_cameraController!),
-                  )
-                else
-                  const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              bottom: 80, // Leave space for the button
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Stack(
                       children: [
-                        const Text(
-                          'Lokasi',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Poppins',
+                        if (_isCameraInitialized)
+                          Center(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: CameraPreview(_cameraController!),
+                            ),
+                          )
+                        else
+                          const Center(
+                            child: CircularProgressIndicator(),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _currentAddress ?? '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontFamily: 'Poppins',
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Lokasi',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _currentAddress ??
+                                      '2JCH+82V, Jl. Babakan Leuvi Bandung, RT.02/RW.03, Citeureup, Kec. Dayeuhkolot, Kabupaten Bandung, Jawa Barat 40255',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontFamily: 'Poppins',
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 16,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: _takePicture,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFA726),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
+              ),
+            ),
+            Positioned(
+              bottom: 16.0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: GestureDetector(
+                  onTap: _takePicture,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFA726),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 32,
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+            Positioned(
+              bottom: 24.0, // Adjust position as needed
+              right: 24.0, // Adjust position as needed
+              child: IconButton(
+                icon: const Icon(Icons.switch_camera,
+                    color: Colors.black, size: 30), // Adjust color and size
+                onPressed: _switchCamera,
+              ),
+            ),
+          ],
         ),
-      ),
-    );
+      );
+    }
   }
 }

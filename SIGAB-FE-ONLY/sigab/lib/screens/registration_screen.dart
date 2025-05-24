@@ -280,8 +280,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        const SizedBox(height: 20),
+                        Wrap(
+                          alignment: WrapAlignment.center,
                           children: [
                             const Text(
                               'Sudah mendaftar sebagai pengguna? ',

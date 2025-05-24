@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_map/flutter_map.dart';
-import 'dart:ui' show Path;
 
 class BuatLaporanScreen extends StatefulWidget {
   const BuatLaporanScreen({super.key});
@@ -11,7 +10,7 @@ class BuatLaporanScreen extends StatefulWidget {
 }
 
 class _BuatLaporanScreenState extends State<BuatLaporanScreen> {
-  int _selectedIndex = 2; // Set to 2 for Lapor tab
+  final int _selectedIndex = 2; // Set to 2 for Lapor tab
   String? selectedJenisLaporan;
   final TextEditingController _lokasiController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
@@ -199,8 +198,8 @@ class _BuatLaporanScreenState extends State<BuatLaporanScreen> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: FlutterMap(
-                    options: MapOptions(
-                      center: const LatLng(-6.905977, 107.613144),
+                    options: const MapOptions(
+                      center: LatLng(-6.905977, 107.613144),
                       zoom: 14,
                       minZoom: 5,
                       maxZoom: 18,
@@ -211,17 +210,18 @@ class _BuatLaporanScreenState extends State<BuatLaporanScreen> {
                             'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.sigab.app',
                       ),
-                      MarkerLayer(
+                      const MarkerLayer(
                         markers: [
                           Marker(
-                            point: const LatLng(-6.905977, 107.613144),
+                            point: LatLng(-6.905977, 107.613144),
                             width: 80,
                             height: 80,
-                            child: const Icon(
+                            child: Icon(
                               Icons.location_on,
                               color: Colors.red,
                               size: 40,
                             ),
+                            rotate: true,
                           ),
                         ],
                       ),
@@ -350,80 +350,6 @@ class _BuatLaporanScreenState extends State<BuatLaporanScreen> {
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Theme(
-        data: ThemeData(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            if (index != _selectedIndex) {
-              // Handle navigation here if needed
-              setState(() {
-                _selectedIndex = index;
-              });
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF016FB9),
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          selectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-          ),
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.wb_sunny_outlined),
-              activeIcon: Icon(Icons.wb_sunny),
-              label: 'Cuaca',
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF016FB9),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              label: 'Lapor',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 24,
-                height: 24,
-                child: CustomPaint(
-                  painter: WavePainter(
-                    color: _selectedIndex == 3
-                        ? const Color(0xFF016FB9)
-                        : Colors.grey,
-                  ),
-                ),
-              ),
-              label: 'Banjir',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.menu),
-              label: 'Lainnya',
-            ),
-          ],
         ),
       ),
     );

@@ -16,6 +16,11 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
   bool _isSaving = false;
   String? _error;
 
+  // State variables for password visibility
+  bool _isOldPasswordVisible = false;
+  bool _isNewPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
+
   Future<void> _savePassword() async {
     setState(() {
       _isSaving = true;
@@ -180,11 +185,23 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
               ),
               child: TextField(
                 controller: _oldPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: !_isOldPasswordVisible,
+                decoration: InputDecoration(
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isOldPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isOldPasswordVisible = !_isOldPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
@@ -206,11 +223,23 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
               ),
               child: TextField(
                 controller: _newPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: !_isNewPasswordVisible,
+                decoration: InputDecoration(
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isNewPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isNewPasswordVisible = !_isNewPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
@@ -232,11 +261,23 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
               ),
               child: TextField(
                 controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
+                obscureText: !_isConfirmPasswordVisible,
+                decoration: InputDecoration(
                   contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isConfirmPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
@@ -269,5 +310,13 @@ class _UbahPasswordScreenState extends State<UbahPasswordScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
   }
 }

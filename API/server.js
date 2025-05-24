@@ -1,12 +1,24 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 require('dotenv').config();
+
+// Log environment variables (without sensitive data)
+console.log('Environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  PORT: process.env.PORT,
+  hasSupabaseUrl: !!process.env.SUPABASE_URL,
+  hasSupabaseKey: !!process.env.SUPABASE_SERVICE_KEY
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from the public directory
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Import routes
 const appRoutes = require('./src/routes/appRoutes');
@@ -25,10 +37,16 @@ app.get('/', (req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error details:', {
+    message: err.message,
+    stack: err.stack,
+    name: err.name
+  });
+  
   res.status(500).json({
     status: 'error',
-    message: err.message || 'Terjadi kesalahan pada server'
+    message: err.message || 'Terjadi kesalahan pada server',
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 
@@ -44,6 +62,21 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server SIGAB berjalan di port ${PORT}`);
+}).on('error', (err) => {
+  console.error('Server error:', err);
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 module.exports = app;

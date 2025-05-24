@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class TempatEvakuasiScreen extends StatelessWidget {
   const TempatEvakuasiScreen({super.key});
@@ -208,7 +207,7 @@ class TempatEvakuasiScreen extends StatelessWidget {
             BottomNavigationBarItem(
               icon: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.blue,
                   shape: BoxShape.circle,
                 ),

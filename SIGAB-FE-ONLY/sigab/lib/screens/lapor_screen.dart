@@ -41,6 +41,7 @@ class LaporScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Poppins',
                   ),
+                  textAlign: TextAlign.center,  // Menambah perataan tengah
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -63,17 +64,15 @@ class LaporScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             side: const BorderSide(color: Colors.grey),
                           ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),  // Menyamakan padding
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            'Kembali',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Poppins',
-                            ),
+                        child: const Text(
+                          'Kembali',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ),
@@ -92,17 +91,15 @@ class LaporScreen extends StatelessWidget {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),  // Menyamakan padding
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text(
-                            'OK',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Poppins',
-                            ),
+                        child: const Text(
+                          'OK',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ),

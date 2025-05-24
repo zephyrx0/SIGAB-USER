@@ -3,11 +3,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_map/flutter_map.dart';
 import 'package:sigab/widgets/map_widget.dart';
-import 'dart:ui' show Path;
 import 'lapor_screen.dart';
 import 'banjir_screen.dart';
 import 'cuaca_screen.dart';
 import 'lainnya_screen.dart';
+import 'tips_mitigasi_screen.dart';
+import 'tempat_evakuasi_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -165,7 +166,11 @@ class HomeContent extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
+                    icon: const Icon(
+                      Icons.notifications_outlined,
+                      size: 28,  // Memperbesar ukuran icon
+                    ),
+                    padding: const EdgeInsets.all(8),  // Menambah padding tombol
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -213,11 +218,11 @@ class HomeContent extends StatelessWidget {
                                       color: const Color(0xFF2196F3),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Column(
+                                    child: const Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                        Text(
                                           '10 menit yang lalu',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -225,8 +230,8 @@ class HomeContent extends StatelessWidget {
                                             fontFamily: 'Poppins',
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        const Text(
+                                        SizedBox(height: 4),
+                                        Text(
                                           'Perkiraan hujan selama lebih dari 5 jam akan terjadi di Citeureup, lakukan mitigasi banjir.',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -254,11 +259,11 @@ class HomeContent extends StatelessWidget {
                                       color: const Color(0xFF2196F3),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Column(
+                                    child: const Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                        Text(
                                           '10 Maret 2025, 14.55 WIB',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -266,8 +271,8 @@ class HomeContent extends StatelessWidget {
                                             fontFamily: 'Poppins',
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        const Text(
+                                        SizedBox(height: 4),
+                                        Text(
                                           'Terjadi Banjir di Wilayah Jl. Radio Palasari, ketuk untuk melihat detail',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -285,11 +290,11 @@ class HomeContent extends StatelessWidget {
                                       color: const Color(0xFF2196F3),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: Column(
+                                    child: const Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                        Text(
                                           '10 Maret 2025, 09.34 WIB',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -297,8 +302,8 @@ class HomeContent extends StatelessWidget {
                                             fontFamily: 'Poppins',
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        const Text(
+                                        SizedBox(height: 4),
+                                        Text(
                                           'Perkiraan hujan selama lebih dari 5 jam akan terjadi di Citeureup, lakukan mitigasi banjir.',
                                           style: TextStyle(
                                             color: Colors.white,
@@ -498,14 +503,45 @@ class HomeContent extends StatelessWidget {
               MapWidget(
                 center: const LatLng(-6.975353, 107.629601),
                 markers: [
-                  Marker(
-                    point: const LatLng(-6.975353, 107.629601),
+                  const Marker(
+                    point: LatLng(-6.975353, 107.629601),
                     width: 80,
                     height: 80,
                     child: Icon(
                       Icons.location_on,
                       color: Colors.red,
                       size: 40,
+                    ),
+                  ),
+                  // Marker baru
+                  Marker(
+                    point: const LatLng(-6.976486, 107.633163),
+                    width: 40,
+                    height: 40,
+                    child: Stack(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.red.withOpacity(0.3),
+                          ),
+                        ),
+                        Center(
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.red,
+                            ),
+                            child: const Icon(
+                              Icons.water,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -661,26 +697,28 @@ class HomeContent extends StatelessWidget {
                       children: [
                         const Icon(Icons.flag, color: Colors.orange, size: 24),
                         const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Wilayah Banjir',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontFamily: 'Poppins',
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Wilayah Banjir',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
-                            ),
-                            const Text(
-                              'Jl. Radio Palasari',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: 'Poppins',
+                              const Text(
+                                'Jl. Radio Palasari',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Poppins',
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -749,22 +787,34 @@ class HomeContent extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const Text(
-                                  'Tempat Evakuasi',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'Poppins',
-                                    color: Colors.white,
+                                const Expanded(
+                                  child: Text(
+                                    'Tempat Evakuasi',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Poppins',
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.transparent,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const TempatEvakuasiScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.transparent,
+                                    ),
+                                    child: _buildLinksOutIcon(color: Colors.white),
                                   ),
-                                  child:
-                                      _buildLinksOutIcon(color: Colors.white),
                                 ),
                               ],
                             ),
@@ -821,22 +871,34 @@ class HomeContent extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                const Text(
-                                  'Mitigasi Bencana',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'Poppins',
-                                    color: Colors.white,
+                                const Expanded(
+                                  child: Text(
+                                    'Mitigasi Bencana',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Poppins',
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.transparent,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const TipsMitigasiScreen(),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.transparent,
+                                    ),
+                                    child: _buildLinksOutIcon(color: Colors.white),
                                   ),
-                                  child:
-                                      _buildLinksOutIcon(color: Colors.white),
                                 ),
                               ],
                             ),

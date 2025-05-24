@@ -3,6 +3,8 @@ import 'package:sigab/api_service.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'laporan_banjir_screen.dart';
 import 'laporan_infrastruktur_screen.dart';
+import '../widgets/success_dialog.dart';
+import 'package:sigab/utils/wave_painter.dart';
 
 class LaporScreen extends StatelessWidget {
   const LaporScreen({super.key});
@@ -170,64 +172,60 @@ class LaporScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _checkTokenAndNavigate(BuildContext context, Widget destination) async {
+  Future<void> _checkTokenAndNavigate(
+      BuildContext context, String routeName) async {
     final token = await ApiService.getToken();
     if (token == null) {
       // Jika tidak ada token, arahkan ke halaman login
       Navigator.of(context).pushNamed('/login');
     } else {
       // Jika ada token, lanjut ke halaman tujuan
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => destination,
-        ),
-      );
+      Navigator.pushNamed(context, routeName);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'Lapor',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
-                  ),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            const Center(
+              child: Text(
+                'Lapor',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Poppins',
                 ),
               ),
-              const SizedBox(height: 24),
-              _buildActionCard(
-                title: 'Buat Laporan Banjir',
-                description: 'Buat laporan terkait banjir atau bencana banjir untuk direspon pihak desa',
-                onTap: () => _checkTokenAndNavigate(context, const LaporanBanjirScreen()),
-              ),
-              const SizedBox(height: 16),
-              _buildActionCard(
-                title: 'Buat Laporan Kerusakan',
-                description: 'Buat laporan terkait kerusakan infrastruktur untuk direspon pihak desa',
-                onTap: () => _checkTokenAndNavigate(context, const LaporanInfrastrukturScreen()),
-              ),
-              const SizedBox(height: 16),
-              _buildActionCard(
-                title: 'Hubungi KASI Kesejahteraan',
-                description:
-                    'Menuju ke telepon saat membutuhkan tim KASI Kesejahteraan, atau dalam keadaan darurat',
-                onTap: () => _showKASIDialog(context),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            _buildActionCard(
+              title: 'Buat Laporan Banjir',
+              description:
+                  'Buat laporan terkait banjir atau bencana banjir untuk direspon pihak desa',
+              onTap: () => _checkTokenAndNavigate(context, '/laporan_banjir'),
+            ),
+            const SizedBox(height: 16),
+            _buildActionCard(
+              title: 'Buat Laporan Kerusakan',
+              description:
+                  'Buat laporan terkait kerusakan infrastruktur untuk direspon pihak desa',
+              onTap: () =>
+                  _checkTokenAndNavigate(context, '/laporan_infrastruktur'),
+            ),
+            const SizedBox(height: 16),
+            _buildActionCard(
+              title: 'Hubungi KASI Kesejahteraan',
+              description:
+                  'Menuju ke telepon saat membutuhkan tim KASI Kesejahteraan, atau dalam keadaan darurat',
+              onTap: () => _showKASIDialog(context),
+            ),
+          ],
         ),
       ),
     );

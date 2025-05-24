@@ -251,8 +251,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        const SizedBox(height: 20),
+                        Wrap(
+                          alignment: WrapAlignment.center,
                           children: [
                             const Text(
                               'Belum mendaftar sebagai pengguna? ',

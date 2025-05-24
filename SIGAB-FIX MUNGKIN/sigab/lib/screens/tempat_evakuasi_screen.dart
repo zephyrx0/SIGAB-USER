@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../api_service.dart';
+import 'package:sigab/utils/wave_painter.dart'; // Import WavePainter
 
 class TempatEvakuasiScreen extends StatefulWidget {
   const TempatEvakuasiScreen({super.key});
@@ -182,6 +182,7 @@ class _TempatEvakuasiScreenState extends State<TempatEvakuasiScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
           'Tempat Evakuasi',
           style: TextStyle(
@@ -190,157 +191,57 @@ class _TempatEvakuasiScreenState extends State<TempatEvakuasiScreen> {
             fontFamily: 'Poppins',
           ),
         ),
-        centerTitle: true,
         backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 0,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Terjadi kesalahan: $_error',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchTempatEvakuasi,
-                        child: const Text('Coba Lagi'),
-                      ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Column(
-                      children: _tempatEvakuasi.map((tempat) {
-                        return _buildEvakuasiCard(
-                          tempat['nama_tempat'] ?? '',
-                          tempat['foto'] ?? 'assets/images/tempat_evakuasi.jpg',
-                          tempat['link_gmaps'] ?? '',
-                          () {},
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-      bottomNavigationBar: Theme(
-        data: ThemeData(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
-        child: BottomNavigationBar(
-          currentIndex: 4,
-          onTap: (index) {
-            if (index != 4) {
-              Navigator.pop(context);
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF016FB9),
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          selectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _isLoading
+                  ? [const Center(child: CircularProgressIndicator())]
+                  : _error != null
+                      ? [
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Terjadi kesalahan: $_error',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _fetchTempatEvakuasi,
+                                  child: const Text('Coba Lagi'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ]
+                      : _tempatEvakuasi.map((tempat) {
+                          return _buildEvakuasiCard(
+                            tempat['nama_tempat'] ?? '',
+                            tempat['foto'] ??
+                                'assets/images/tempat_evakuasi.jpg',
+                            tempat['link_gmaps'] ?? '',
+                            () {},
+                          );
+                        }).toList(),
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-          ),
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.wb_sunny_outlined),
-              activeIcon: Icon(Icons.wb_sunny),
-              label: 'Cuaca',
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              label: 'Lapor',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 24,
-                height: 24,
-                child: CustomPaint(
-                  painter: WavePainter(
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              label: 'Banjir',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.menu),
-              label: 'Lainnya',
-            ),
-          ],
         ),
       ),
     );
   }
 }
 
-// Add WavePainter class
-class WavePainter extends CustomPainter {
-  final Color color;
-
-  WavePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    final path = Path();
-    path.moveTo(0, size.height * 0.5);
-
-    // First wave
-    path.cubicTo(
-      size.width * 0.25,
-      size.height * 0.25,
-      size.width * 0.25,
-      size.height * 0.75,
-      size.width * 0.5,
-      size.height * 0.5,
-    );
-
-    // Second wave
-    path.cubicTo(
-      size.width * 0.75,
-      size.height * 0.25,
-      size.width * 0.75,
-      size.height * 0.75,
-      size.width,
-      size.height * 0.5,
-    );
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
+// Hapus seluruh definisi kelas WavePainter di sini jika ada

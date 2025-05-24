@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:flutter_map/flutter_map.dart';
-import 'dart:ui' show Path;
-import 'riwayat_banjir_screen.dart';
 
 class DetailRiwayatBanjirScreen extends StatelessWidget {
   final String date;
@@ -11,6 +9,7 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
   final String depth;
   final Color statusColor;
   final String status;
+  final Map<String, dynamic> coordinates;
 
   const DetailRiwayatBanjirScreen({
     super.key,
@@ -20,6 +19,7 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
     required this.depth,
     required this.statusColor,
     required this.status,
+    required this.coordinates,
   });
 
   Widget _buildFloodCard() {
@@ -47,15 +47,13 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
                   size: 20, color: Colors.grey),
               const SizedBox(width: 8),
               Text(
-                'Citeureup (0.07 LS, 109.37 BT)',
+                '${location ?? 'N/A'} (${coordinates['y'] ?? 'N/A'} LS, ${coordinates['x'] ?? 'N/A'} BT)',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
                   fontFamily: 'Poppins',
                 ),
               ),
-              const Spacer(),
-              const Icon(Icons.share, size: 20),
             ],
           ),
           const SizedBox(height: 12),
@@ -169,26 +167,28 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
             children: [
               const Icon(Icons.flag, color: Colors.orange, size: 24),
               const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Wilayah Banjir',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                      fontFamily: 'Poppins',
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Wilayah Banjir',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
-                  ),
-                  Text(
-                    location,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: 'Poppins',
+                    Text(
+                      location,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Poppins',
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -200,196 +200,149 @@ class DetailRiwayatBanjirScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'Detail Riwayat Banjir',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Poppins',
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              const Center(
-                child: Text(
-                  'Banjir',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Poppins',
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                const Center(
+                  child: Text(
+                    'Banjir',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              // Tab buttons
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          side: BorderSide(
-                            color: Colors.grey.shade300,
-                          ),
-                        ),
-                        child: Text(
-                          'Banjir Terkini',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFA726),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Riwayat Banjir',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Map Container
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: FlutterMap(
-                    options: MapOptions(
-                      center: const LatLng(-6.983004, 107.628411),
-                      zoom: 14,
-                      minZoom: 5,
-                      maxZoom: 18,
-                    ),
+                const SizedBox(height: 16),
+                // Tab buttons
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
                     children: [
-                      TileLayer(
-                        urlTemplate:
-                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.sigab.app',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: const LatLng(-6.983004, 107.628411),
-                            width: 80,
-                            height: 80,
-                            child: const Icon(
-                              Icons.location_on,
-                              color: Colors.red,
-                              size: 40,
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            side: BorderSide(
+                              color: Colors.grey.shade300,
                             ),
                           ),
-                        ],
+                          child: Text(
+                            'Banjir Terkini',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFA726),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Riwayat Banjir',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _buildFloodCard(),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Theme(
-        data: ThemeData(
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-        ),
-        child: BottomNavigationBar(
-          currentIndex: 3,
-          onTap: (index) {
-            if (index != 3) {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF016FB9),
-          unselectedItemColor: Colors.grey,
-          backgroundColor: Colors.white,
-          selectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 12,
-          ),
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.wb_sunny_outlined),
-              activeIcon: Icon(Icons.wb_sunny),
-              label: 'Cuaca',
-            ),
-            BottomNavigationBarItem(
-              icon: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.chat_outlined,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              label: 'Lapor',
-            ),
-            BottomNavigationBarItem(
-              icon: SizedBox(
-                width: 24,
-                height: 24,
-                child: CustomPaint(
-                  painter: WavePainter(
-                    color: const Color(0xFF016FB9),
+                const SizedBox(height: 16),
+                // Map Container
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: FlutterMap(
+                      options: MapOptions(
+                        center: LatLng(coordinates['y'], coordinates['x']),
+                        zoom: 14,
+                        minZoom: 5,
+                        maxZoom: 18,
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.sigab.app',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: LatLng(coordinates['y'], coordinates['x']),
+                              width: 80,
+                              height: 80,
+                              child: Icon(
+                                Icons.location_on,
+                                color: statusColor,
+                                size: 40,
+                              ),
+                              rotate: true,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              label: 'Banjir',
+                const SizedBox(height: 16),
+                _buildFloodCard(),
+                const SizedBox(height: 16),
+              ],
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.menu),
-              label: 'Lainnya',
-            ),
-          ],
+          ),
         ),
       ),
     );

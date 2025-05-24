@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sigab/api_service.dart';
-import 'detail_riwayat_banjir_screen.dart';
-import 'home_screen.dart';
+import 'detail_riwayat_banjir_screen.dart' hide WavePainter;
+import 'main_screen.dart';
 import 'cuaca_screen.dart';
 import 'lapor_screen.dart';
 import 'lainnya_screen.dart';
+import 'package:sigab/utils/wave_painter.dart';
 
 class RiwayatBanjirScreen extends StatefulWidget {
   const RiwayatBanjirScreen({super.key});
@@ -14,7 +15,7 @@ class RiwayatBanjirScreen extends StatefulWidget {
 }
 
 class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
-  bool _isBanjirTerkini = false;
+  final bool _isBanjirTerkini = false;
   bool _isLoading = true;
   String _error = '';
   List<dynamic>? _riwayatBanjir;
@@ -61,23 +62,24 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
   Widget _buildFloodCard(Map<String, dynamic> riwayat) {
     final waktu = DateTime.parse(riwayat['waktu_kejadian']);
     final formattedDate = '${waktu.day}-${waktu.month}-${waktu.year}';
-    final formattedTime = '${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}';
+    final formattedTime =
+        '${waktu.hour.toString().padLeft(2, '0')}:${waktu.minute.toString().padLeft(2, '0')}';
     final statusColor = _getStatusColor(riwayat['kategori_kedalaman']);
-    
+
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => DetailRiwayatBanjirScreen(
-              date: formattedDate,
-              time: formattedTime,
-              location: riwayat['wilayah_banjir'],
-              depth: riwayat['tingkat_kedalaman'],
-              statusColor: statusColor,
-              status: riwayat['kategori_kedalaman'],
-            ),
-          ),
+          '/detail-riwayat-banjir',
+          arguments: {
+            'date': formattedDate,
+            'time': formattedTime,
+            'location': riwayat['wilayah_banjir'],
+            'depth': riwayat['tingkat_kedalaman'],
+            'statusColor': statusColor,
+            'status': riwayat['kategori_kedalaman'],
+            'coordinates': riwayat['koordinat_lokasi'],
+          },
         );
       },
       child: Container(
@@ -105,17 +107,14 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    riwayat['wilayah_banjir'],
+                    '${riwayat['wilayah_banjir'] ?? 'N/A'} (${riwayat['koordinat_lokasi']['y'] ?? 'N/A'} LS, ${riwayat['koordinat_lokasi']['x'] ?? 'N/A'} BT)',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,
                       fontFamily: 'Poppins',
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
-                const Icon(Icons.share, size: 20),
               ],
             ),
             const SizedBox(height: 12),
@@ -267,12 +266,12 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              const Padding(
+                padding: EdgeInsets.all(16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
+                    Text(
                       'Riwayat Banjir',
                       style: TextStyle(
                         fontSize: 20,
@@ -345,7 +344,8 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 48),
                       const SizedBox(height: 16),
                       Text(_error),
                       const SizedBox(height: 16),
@@ -371,7 +371,9 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
-                    children: _riwayatBanjir!.map((riwayat) => _buildFloodCard(riwayat)).toList(),
+                    children: _riwayatBanjir!
+                        .map((riwayat) => _buildFloodCard(riwayat))
+                        .toList(),
                   ),
                 ),
             ],
@@ -387,32 +389,30 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
           currentIndex: 3,
           onTap: (index) {
             if (index != 3) {
+              String targetRoute;
               switch (index) {
                 case 0:
-                  Navigator.pushReplacement(
-                    context, 
-                    MaterialPageRoute(builder: (context) => const HomeScreen())
-                  );
+                  targetRoute = '/';
                   break;
                 case 1:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const CuacaScreen())
-                  );
+                  targetRoute = '/cuaca';
                   break;
                 case 2:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LaporScreen())
-                  );
+                  targetRoute = '/lapor';
                   break;
                 case 4:
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LainnyaScreen())
-                  );
+                  targetRoute = '/lainnya';
                   break;
+                default:
+                  targetRoute = '/'; // Default to home if index is unexpected
               }
+              // Navigate to MainScreen (root route) passing the targetRoute as argument
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => route.settings.name == '/',
+                arguments: targetRoute,
+              );
             }
           },
           type: BottomNavigationBarType.fixed,
@@ -441,7 +441,7 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
             BottomNavigationBarItem(
               icon: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.blue,
                   shape: BoxShape.circle,
                 ),
@@ -474,46 +474,4 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
       ),
     );
   }
-}
-
-class WavePainter extends CustomPainter {
-  final Color color;
-
-  WavePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    final path = Path();
-    path.moveTo(0, size.height * 0.5);
-
-    // First wave
-    path.cubicTo(
-      size.width * 0.25,
-      size.height * 0.25,
-      size.width * 0.25,
-      size.height * 0.75,
-      size.width * 0.5,
-      size.height * 0.5,
-    );
-
-    // Second wave
-    path.cubicTo(
-      size.width * 0.75,
-      size.height * 0.25,
-      size.width * 0.75,
-      size.height * 0.75,
-      size.width,
-      size.height * 0.5,
-    );
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

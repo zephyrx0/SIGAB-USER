@@ -6,6 +6,9 @@ import 'screens/banjir_screen.dart';
 import 'screens/cuaca_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/reset_password_screen.dart';
+import 'screens/lapor_screen.dart';
+import 'screens/lainnya_screen.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -31,6 +34,8 @@ class MyApp extends StatelessWidget {
         '/cuaca': (context) => const CuacaScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/reset-password': (context) => const ResetPasswordScreen(),
+        '/lapor': (context) => const LaporScreen(),
+        '/lainnya': (context) => const LainnyaScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

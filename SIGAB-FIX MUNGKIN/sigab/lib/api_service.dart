@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sigab/services/notification_service.dart';
+import 'package:sigab/services/twilio_service.dart';
 
 class ApiService {
   /// URL dasar untuk API endpoint
   static const String baseUrl =
-      // 'https://e686-36-69-143-197.ngrok-free.app/api'; // Ubah menjadi base API saja
-      'http://localhost:3000/api'; // Ubah menjadi base API saja
+      'https://4d50-36-69-143-197.ngrok-free.app/api'; // Ubah menjadi base API saja
+  // 'http://localhost:3000/api'; // Ubah menjadi base API saja
   static const String userUrl = '$baseUrl/users'; // Tambah endpoint khusus user
   static const String appUrl = '$baseUrl/app'; // Tambah endpoint khusus app
 
@@ -62,7 +65,7 @@ class ApiService {
       }
     } catch (e) {
       if (e is String) {
-        throw e;
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
@@ -95,7 +98,7 @@ class ApiService {
       }
     } catch (e) {
       if (e is String) {
-        throw e;
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
@@ -128,7 +131,7 @@ class ApiService {
     } catch (e) {
       await removeToken();
       if (e is String) {
-        throw e;
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
@@ -145,14 +148,13 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        print('Weather response: ${response.body}');
         return data;
       } else {
         throw data['message'] ?? 'Gagal mengambil data cuaca';
       }
     } catch (e) {
       if (e is String) {
-        throw e;
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
@@ -177,7 +179,7 @@ class ApiService {
       }
     } catch (e) {
       if (e is String) {
-        throw e;
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
@@ -202,7 +204,7 @@ class ApiService {
       }
     } catch (e) {
       if (e is String) {
-        throw e;
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
@@ -230,41 +232,67 @@ class ApiService {
     }
   }
 
-  /// Fungsi untuk mengirim laporan ke server
+  /// Fungsi untuk mengirim laporan ke server (Updated for file upload)
   static Future<Map<String, dynamic>> submitLaporan({
     required String idUser,
     required String tipeLaporan,
     required String lokasi,
     required String waktu,
     required String deskripsi,
-    required String foto,
-    required String titikLokasi, // Tambahkan parameter baru
+    Uint8List? fotoBytes, // Accepts file bytes
+    String? filename, // Accepts filename
+    required String titikLokasi,
   }) async {
     try {
       final token = await getToken();
       if (token == null) throw Exception('Token tidak ditemukan');
 
-      final response = await http.post(
-        Uri.parse('$appUrl/laporan'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'id_user': idUser,
-          'tipe_laporan': tipeLaporan,
-          'lokasi': lokasi,
-          'waktu': waktu,
-          'deskripsi': deskripsi,
-          'foto': foto,
-          'titik_lokasi': titikLokasi, // Tambahkan titik lokasi ke body request
-        }),
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(
+            '$appUrl/laporan'), // Ensure this matches your backend upload endpoint
       );
 
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        // 'Content-Type': 'multipart/form-data' is usually added automatically by http.MultipartRequest
+      });
+
+      request.fields.addAll({
+        'id_user': idUser,
+        'tipe_laporan': tipeLaporan,
+        'lokasi': lokasi,
+        'waktu': waktu,
+        'deskripsi': deskripsi,
+        'titik_lokasi': titikLokasi,
+      });
+
+      // Attach the file to the request if bytes and filename are available
+      if (fotoBytes != null && filename != null) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'foto', // Make sure 'foto' matches the field name expected by your backend Multer setup
+          fotoBytes,
+          filename: filename,
+        ));
       } else {
-        throw Exception(jsonDecode(response.body)['message'] ??
+        // Handle cases where photo is required but not available
+        // Depending on your backend validation, you might throw an error here
+        print(
+            'Warning: Photo bytes or filename are missing. Submitting without photo.');
+        // If backend requires photo, the backend should return an error.
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      final dynamic responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        // Check if backend returned the photoUrl and potentially return it
+        return responseData; // Or return specific data you need
+      } else {
+        // Handle backend errors, which might include the 'foto' required error
+        throw Exception(responseData['message'] ??
             'Terjadi kesalahan saat mengirim laporan');
       }
     } catch (e) {
@@ -370,11 +398,27 @@ class ApiService {
   static Future<Map<String, dynamic>> requestResetPassword(
       String nomorWa) async {
     try {
+      // Generate OTP
+      final otp = TwilioService.generateOTP();
+
+      // Send OTP via WhatsApp
+      final messageSent = await TwilioService.sendWhatsAppMessage(
+        to: nomorWa,
+        message:
+            'Kode OTP untuk reset password SIGAB Anda adalah: $otp\n\nKode ini akan kadaluarsa dalam 5 menit.',
+      );
+
+      if (!messageSent) {
+        throw 'Gagal mengirim kode OTP';
+      }
+
+      // Store OTP in backend
       final response = await http.post(
-        Uri.parse('$userUrl/forgot-password'), // Gunakan userUrl
+        Uri.parse('$userUrl/forgot-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'nomor_wa': nomorWa,
+          'otp': otp,
         }),
       );
 
@@ -438,7 +482,85 @@ class ApiService {
       }
     } catch (e) {
       if (e is String) {
-        throw e;
+        rethrow;
+      }
+      throw e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  /// Fungsi untuk mengecek laporan banjir dan notifikasi
+  static Future<Map<String, dynamic>> checkFloodReports() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$appUrl/check-flood-reports'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw data['message'] ?? 'Gagal mengecek laporan banjir';
+      }
+    } catch (e) {
+      throw e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  /// Fungsi untuk mendapatkan riwayat notifikasi
+  static Future<List<dynamic>> getNotificationHistory() async {
+    try {
+      final installDate = await NotificationService().getInstallDate();
+      final response = await http.get(
+        Uri.parse(
+            '$appUrl/notification-history?installed_at=${installDate.toIso8601String()}'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['data'] as List<dynamic>;
+      } else {
+        throw data['message'] ?? 'Gagal mengambil riwayat notifikasi';
+      }
+    } catch (e) {
+      if (e is String) {
+        rethrow;
+      }
+      throw e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  /// Fungsi untuk mendapatkan informasi banjir terbaru
+  static Future<Map<String, dynamic>?> getLatestFloodInfo() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$appUrl/latest-flood-info'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data[
+            'data']; // Mengembalikan objek data informasi banjir terbaru
+      } else if (response.statusCode == 404) {
+        // Tidak ada informasi banjir ditemukan, ini kondisi normal jika belum ada data
+        return null;
+      } else {
+        final data = jsonDecode(response.body);
+        throw data['message'] ?? 'Gagal mengambil informasi banjir terbaru';
+      }
+    } catch (e) {
+      if (e is String) {
+        rethrow;
       }
       throw e.toString().replaceAll('Exception: ', '');
     }
