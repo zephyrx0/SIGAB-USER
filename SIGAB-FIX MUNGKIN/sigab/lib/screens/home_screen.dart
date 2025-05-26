@@ -19,7 +19,108 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigab/widgets/flood_info_card.dart';
 import 'package:sigab/widgets/notification_dialog.dart';
 import 'package:sigab/widgets/other_section.dart';
+import 'package:sigab/utils/wave_painter.dart';
 import 'package:sigab/widgets/unified_weather_card.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _selectedIndex = 0;
+  Position? _userLocation;
+
+  final List<Widget> _screens = [
+    const HomeContent(),
+    const CuacaScreen(),
+    const LaporScreen(),
+    const BanjirScreen(),
+    const LainnyaScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: Theme(
+        data: ThemeData(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: const Color(0xFF016FB9),
+          unselectedItemColor: Colors.grey,
+          backgroundColor: Colors.white,
+          selectedLabelStyle: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 12,
+          ),
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.wb_sunny_outlined),
+              activeIcon: Icon(Icons.wb_sunny),
+              label: 'Cuaca',
+            ),
+            BottomNavigationBarItem(
+              icon: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 2
+                      ? const Color(0xFF016FB9)
+                      : Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.chat_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              label: 'Lapor',
+            ),
+            BottomNavigationBarItem(
+              icon: SizedBox(
+                width: 24,
+                height: 24,
+                child: CustomPaint(
+                  painter: WavePainter(
+                    color: _selectedIndex == 3
+                        ? const Color(0xFF016FB9)
+                        : Colors.grey,
+                  ),
+                ),
+              ),
+              label: 'Banjir',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.menu),
+              label: 'Lainnya',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
@@ -34,9 +135,6 @@ class _HomeContentState extends State<HomeContent> {
   Map<String, dynamic>? _weatherData;
   Map<String, dynamic>? _floodData;
   Position? _userLocation;
-  LatLng _mapCenter =
-      const LatLng(-6.914744, 107.609810); // Default Bandung center
-  double _mapZoom = 12.0; // Default zoom
 
   @override
   void initState() {
@@ -44,64 +142,6 @@ class _HomeContentState extends State<HomeContent> {
     initializeDateFormatting('id_ID', null).then((_) => _fetchWeatherData());
     _fetchFloodData();
     _getUserLocation();
-  }
-
-  // Fungsi untuk menghitung pusat dan zoom peta berdasarkan lokasi pengguna dan data banjir
-  void _calculateMapCenterAndZoom() {
-    List<LatLng> points = [];
-
-    if (_userLocation != null) {
-      points.add(LatLng(_userLocation!.latitude, _userLocation!.longitude));
-    }
-
-    if (_floodData != null &&
-        _floodData!['koordinat_lokasi'] != null &&
-        _floodData!['koordinat_lokasi']['x'] != null &&
-        _floodData!['koordinat_lokasi']['y'] != null) {
-      try {
-        final double floodLat =
-            double.parse(_floodData!['koordinat_lokasi']['y'].toString());
-        final double floodLng =
-            double.parse(_floodData!['koordinat_lokasi']['x'].toString());
-        points.add(LatLng(floodLat, floodLng));
-      } catch (e) {
-        print('Error parsing flood coordinates: $e');
-      }
-    }
-
-    if (points.isEmpty) {
-      // Jika tidak ada data, gunakan pusat Bandung default
-      _mapCenter = const LatLng(-6.914744, 107.609810);
-      _mapZoom = 12.0;
-    } else if (points.length == 1) {
-      // Jika hanya ada satu titik (user atau banjir),
-      // pusat di titik itu dengan zoom sedang
-      _mapCenter = points[0];
-      _mapZoom = 14.0; // Zoom in sedikit
-    } else {
-      // Jika ada dua titik (user dan banjir),
-      // hitung bounding box dan pusatnya
-      final bounds = LatLngBounds.fromPoints(points);
-      _mapCenter = bounds.center;
-
-      // Hitung zoom level agar kedua titik terlihat. Ini pendekatan sederhana,
-      // zoom yang lebih akurat butuh perhitungan jarak dan ukuran layar.
-      final distance =
-          const Distance().as(LengthUnit.Kilometer, points[0], points[1]);
-      if (distance < 1) {
-        // Jika jarak kurang dari 1 km
-        _mapZoom = 15.0;
-      } else if (distance < 5) {
-        // Jika jarak 1-5 km
-        _mapZoom = 14.0;
-      } else if (distance < 10) {
-        // Jika jarak 5-10 km
-        _mapZoom = 13.0;
-      } else {
-        // Jika jarak lebih dari 10 km
-        _mapZoom = 12.0;
-      }
-    }
   }
 
   Future<void> _fetchWeatherData() async {
@@ -124,14 +164,9 @@ class _HomeContentState extends State<HomeContent> {
       final latestInfo = await ApiService.getLatestFloodInfo();
       setState(() {
         _floodData = latestInfo;
-        // Setelah data banjir didapat, hitung ulang pusat dan zoom peta
-        _calculateMapCenterAndZoom();
       });
     } catch (e) {
       print('Error fetching latest flood data: $e');
-      setState(() {
-        _calculateMapCenterAndZoom(); // Tetap hitung jika hanya user location yang ada
-      });
     }
   }
 
@@ -140,15 +175,9 @@ class _HomeContentState extends State<HomeContent> {
       _userLocation = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      setState(() {
-        // Setelah lokasi user didapat, hitung ulang pusat dan zoom peta
-        _calculateMapCenterAndZoom();
-      });
+      setState(() {});
     } catch (e) {
       print('Error getting user location: $e');
-      setState(() {
-        _calculateMapCenterAndZoom(); // Tetap hitung jika hanya flood data yang ada
-      });
     }
   }
 
@@ -289,18 +318,12 @@ class _HomeContentState extends State<HomeContent> {
               else if (_weatherData != null)
                 UnifiedWeatherCard(
                   weatherData: _weatherData,
-                  warningMessage: _buildWarningMessage(),
                   getWeatherIcon: _getWeatherIcon,
-                ),
+                  warningMessage: _buildWarningMessage(),
+                )
+              else if (!_isLoading && _error.isEmpty)
+                const SizedBox.shrink(),
               const SizedBox(height: 16),
-
-              // Warning Card
-              // Note: The warning is now part of UnifiedWeatherCard,
-              // so we remove the separate WarningCard here.
-              // if (_buildWarningMessage().isNotEmpty)
-              //   WarningCard(message: _buildWarningMessage()),
-              // const SizedBox(height: 24),
-              const SizedBox(height: 24),
 
               // Banjir Terkini Section
               const Text(
@@ -313,9 +336,10 @@ class _HomeContentState extends State<HomeContent> {
               ),
               const SizedBox(height: 16),
               MapWidget(
-                // Menggunakan pusat dan zoom yang dihitung
-                center: _mapCenter,
-                zoom: _mapZoom,
+                center: (_floodData != null)
+                    ? LatLng(_floodData!['koordinat_lokasi']['y'],
+                        _floodData!['koordinat_lokasi']['x'])
+                    : const LatLng(-6.975353, 107.629601),
                 markers: [
                   if (_userLocation != null)
                     Marker(
@@ -334,16 +358,10 @@ class _HomeContentState extends State<HomeContent> {
                       ),
                       rotate: true,
                     ),
-                  if (_floodData != null &&
-                      _floodData!['koordinat_lokasi'] != null &&
-                      _floodData!['koordinat_lokasi']['x'] != null &&
-                      _floodData!['koordinat_lokasi']['y'] != null)
+                  if (_floodData != null)
                     Marker(
-                      point: LatLng(
-                          double.parse(
-                              _floodData!['koordinat_lokasi']['y'].toString()),
-                          double.parse(
-                              _floodData!['koordinat_lokasi']['x'].toString())),
+                      point: LatLng(_floodData!['koordinat_lokasi']['y'],
+                          _floodData!['koordinat_lokasi']['x']),
                       width: 40,
                       height: 40,
                       rotate: true,
@@ -378,6 +396,7 @@ class _HomeContentState extends State<HomeContent> {
                     ),
                 ],
                 height: 200,
+                zoom: 14,
               ),
               const SizedBox(height: 24),
 
@@ -439,7 +458,21 @@ class _HomeContentState extends State<HomeContent> {
   String _buildWarningMessage() {
     if (_weatherData == null) return '';
 
-    final todayForecast = _weatherData!['data'][0]['cuaca'][0];
+    final dynamic weatherDataOuter = _weatherData!['data'];
+    if (weatherDataOuter == null ||
+        weatherDataOuter['data'] is! List ||
+        weatherDataOuter['data'].isEmpty) return '';
+
+    final dynamic locationData = weatherDataOuter['data'][0];
+    if (locationData == null ||
+        locationData['cuaca'] is! List ||
+        locationData['cuaca'].isEmpty) return '';
+
+    final dynamic hourlyForecastsListRaw = locationData['cuaca'][0];
+    if (hourlyForecastsListRaw is! List) return '';
+
+    final List<dynamic> todayForecast = hourlyForecastsListRaw;
+
     int consecutiveRainHours = 0;
     DateTime? rainStartTime;
     String? rainType;

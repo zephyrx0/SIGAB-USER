@@ -147,6 +147,7 @@ router.get('/notifikasi', notifikasiController.getAllNotifications);
 
 // Endpoint untuk mengecek laporan banjir dan notifikasi
 router.get('/check-flood-reports', notifikasiController.checkFloodReports);
+router.get('/check-weather-warning', notifikasiController.checkWeatherWarning);
 
 // Endpoint untuk mendapatkan riwayat notifikasi
 router.get('/notification-history', notifikasiController.getNotificationHistory);

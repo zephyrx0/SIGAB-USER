@@ -178,13 +178,13 @@ class _BanjirScreenState extends State<BanjirScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 16),
-            // Header with title
-            const Padding(
-              padding: EdgeInsets.only(top: 30),
-              child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 5),
+              const Center(
                 child: Text(
                   'Banjir',
                   style: TextStyle(
@@ -194,227 +194,227 @@ class _BanjirScreenState extends State<BanjirScreen> {
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            // Tab buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _isBanjirTerkini = true;
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isBanjirTerkini
-                            ? const Color(0xFFFFA726)
-                            : Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        side: BorderSide(
-                          color: _isBanjirTerkini
+              const SizedBox(height: 16),
+              // Tab buttons
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _isBanjirTerkini = true;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isBanjirTerkini
                               ? const Color(0xFFFFA726)
-                              : Colors.grey.shade300,
-                        ),
-                      ),
-                      child: Text(
-                        'Banjir Terkini',
-                        style: TextStyle(
-                          color: _isBanjirTerkini
-                              ? Colors.white
-                              : Colors.grey.shade600,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const RiwayatBanjirScreen(),
+                              : Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(
+                            color: _isBanjirTerkini
+                                ? const Color(0xFFFFA726)
+                                : Colors.grey.shade300,
+                          ),
                         ),
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                        ),
-                      ),
-                      child: Text(
-                        'Riwayat Banjir',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w500,
+                        child: Text(
+                          'Banjir Terkini',
+                          style: TextStyle(
+                            color: _isBanjirTerkini
+                                ? Colors.white
+                                : Colors.grey.shade600,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            // Content based on selected tab
-            if (_isBanjirTerkini) ...[
-              // Map Container using MapWidget
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 300,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _error.isNotEmpty
-                          ? Center(child: Text(_error))
-                          : _floodData == null || _floodData!.isEmpty
-                              ? const Center(
-                                  child: Text('Tidak ada data lokasi banjir'))
-                              : MapWidget(
-                                  // Menggunakan pusat dan zoom yang dihitung
-                                  center: _mapCenter,
-                                  zoom: _mapZoom,
-                                  markers: [
-                                    // Tambah marker untuk lokasi user
-                                    if (_userLocation != null)
-                                      Marker(
-                                        point: LatLng(
-                                          _userLocation!.latitude,
-                                          _userLocation!.longitude,
-                                        ),
-                                        width: 80,
-                                        height: 80,
-                                        child: Container(
-                                          child: const Icon(
-                                            Icons.location_on,
-                                            color: Colors.red,
-                                            size: 40,
-                                          ),
-                                        ),
-                                        rotate: true,
-                                      ),
-                                    // Marker untuk lokasi banjir
-                                    if (_floodData != null)
-                                      ..._floodData!.map<Marker>((flood) {
-                                        final statusColor = _getStatusColor(
-                                            flood['kategori_kedalaman']);
-                                        return Marker(
-                                          point: LatLng(
-                                            double.parse(
-                                                flood['koordinat_lokasi']['y']
-                                                    .toString()),
-                                            double.parse(
-                                                flood['koordinat_lokasi']['x']
-                                                    .toString()),
-                                          ),
-                                          width: 40,
-                                          height: 40,
-                                          rotate: true,
-                                          child: Stack(
-                                            children: [
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  color: statusColor
-                                                      .withOpacity(0.3),
-                                                ),
-                                              ),
-                                              Center(
-                                                child: Container(
-                                                  width: 30,
-                                                  height: 30,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    color: statusColor,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.water,
-                                                    color: Colors.white,
-                                                    size: 18,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      }).toList(),
-                                  ],
-                                  height: 300,
-                                ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RiwayatBanjirScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          side: BorderSide(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Text(
+                          'Riwayat Banjir',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 16),
-              // Flood cards from API data using FloodInfoCard
-              if (!_isLoading &&
-                  _floodData != null &&
-                  _floodData!.isNotEmpty) ...[
+              // Content based on selected tab
+              if (_isBanjirTerkini) ...[
+                // Map Container using MapWidget
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _floodData!.length,
-                    padding: EdgeInsets.zero,
-                    itemBuilder: (context, index) {
-                      final flood = _floodData![index];
-                      return FloodInfoCard(
-                        floodData: flood,
-                        userLocation: _userLocation,
-                        getStatusColor: _getStatusColor,
-                      );
-                    },
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _error.isNotEmpty
+                            ? Center(child: Text(_error))
+                            : _floodData == null || _floodData!.isEmpty
+                                ? const Center(
+                                    child: Text('Tidak ada data lokasi banjir'))
+                                : MapWidget(
+                                    // Menggunakan pusat dan zoom yang dihitung
+                                    center: _mapCenter,
+                                    zoom: _mapZoom,
+                                    markers: [
+                                      // Tambah marker untuk lokasi user
+                                      if (_userLocation != null)
+                                        Marker(
+                                          point: LatLng(
+                                            _userLocation!.latitude,
+                                            _userLocation!.longitude,
+                                          ),
+                                          width: 80,
+                                          height: 80,
+                                          child: Container(
+                                            child: const Icon(
+                                              Icons.location_on,
+                                              color: Colors.red,
+                                              size: 40,
+                                            ),
+                                          ),
+                                          rotate: true,
+                                        ),
+                                      // Marker untuk lokasi banjir
+                                      if (_floodData != null)
+                                        ..._floodData!.map<Marker>((flood) {
+                                          final statusColor = _getStatusColor(
+                                              flood['kategori_kedalaman']);
+                                          return Marker(
+                                            point: LatLng(
+                                              double.parse(
+                                                  flood['koordinat_lokasi']['y']
+                                                      .toString()),
+                                              double.parse(
+                                                  flood['koordinat_lokasi']['x']
+                                                      .toString()),
+                                            ),
+                                            width: 40,
+                                            height: 40,
+                                            rotate: true,
+                                            child: Stack(
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                    shape: BoxShape.circle,
+                                                    color: statusColor
+                                                        .withOpacity(0.3),
+                                                  ),
+                                                ),
+                                                Center(
+                                                  child: Container(
+                                                    width: 30,
+                                                    height: 30,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: statusColor,
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.water,
+                                                      color: Colors.white,
+                                                      size: 18,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }).toList(),
+                                    ],
+                                    height: 300,
+                                  ),
                   ),
                 ),
-              ] else if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                const Center(child: Text('Tidak ada data banjir terkini')),
-            ] else ...[
-              // Riwayat Banjir dari API (still using old flood list for now)
-              if (!_isLoading && _floodData != null) ...[
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  // This part still uses the old approach, will update if needed
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _floodData!.length,
-                    padding: EdgeInsets.zero,
-                    itemBuilder: (context, index) {
-                      final flood = _floodData![index];
-                      return FloodInfoCard(
-                        floodData: flood,
-                        userLocation: _userLocation,
-                        getStatusColor: _getStatusColor,
-                      );
-                    },
+                const SizedBox(height: 16),
+                // Flood cards from API data using FloodInfoCard
+                if (!_isLoading &&
+                    _floodData != null &&
+                    _floodData!.isNotEmpty) ...[
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _floodData!.length,
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (context, index) {
+                        final flood = _floodData![index];
+                        return FloodInfoCard(
+                          floodData: flood,
+                          userLocation: _userLocation,
+                          getStatusColor: _getStatusColor,
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ] else if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                const Center(child: Text('Tidak ada data riwayat banjir')),
+                ] else if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  const Center(child: Text('Tidak ada data banjir terkini')),
+              ] else ...[
+                // Riwayat Banjir dari API (still using old flood list for now)
+                if (!_isLoading && _floodData != null) ...[
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                    // This part still uses the old approach, will update if needed
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _floodData!.length,
+                      padding: EdgeInsets.zero,
+                      itemBuilder: (context, index) {
+                        final flood = _floodData![index];
+                        return FloodInfoCard(
+                          floodData: flood,
+                          userLocation: _userLocation,
+                          getStatusColor: _getStatusColor,
+                        );
+                      },
+                    ),
+                  ),
+                ] else if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  const Center(child: Text('Tidak ada data riwayat banjir')),
+              ],
+              const SizedBox(height: 16),
             ],
-            const SizedBox(height: 16),
-          ],
+          ),
         ),
       ),
     );

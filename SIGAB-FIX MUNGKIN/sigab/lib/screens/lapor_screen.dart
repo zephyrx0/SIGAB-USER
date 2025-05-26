@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sigab/api_service.dart';
 import 'package:url_launcher/url_launcher.dart' as launcher;
+import 'package:permission_handler/permission_handler.dart';
 import 'laporan_banjir_screen.dart';
 import 'laporan_infrastruktur_screen.dart';
 import '../widgets/success_dialog.dart';
@@ -8,6 +9,53 @@ import 'package:sigab/utils/wave_painter.dart';
 
 class LaporScreen extends StatelessWidget {
   const LaporScreen({super.key});
+
+  Future<void> _makePhoneCall(BuildContext context) async {
+    try {
+      // Request phone permission
+      final status = await Permission.phone.request();
+      if (status.isGranted) {
+        final Uri url = Uri.parse('tel://119'); // Using tel:// format
+        debugPrint('DEBUG: Attempting to launch URL: $url');
+
+        if (await launcher.canLaunchUrl(url)) {
+          debugPrint('DEBUG: Can launch URL, proceeding...');
+          await launcher.launchUrl(url);
+          debugPrint('DEBUG: URL launched successfully');
+        } else {
+          debugPrint('DEBUG: Cannot launch URL');
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Tidak dapat membuka aplikasi telepon'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('Izin telepon diperlukan untuk melakukan panggilan'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('DEBUG: Error launching URL: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
 
   void _showKASIDialog(BuildContext context) {
     showDialog(
@@ -44,6 +92,7 @@ class LaporScreen extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Poppins',
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -84,12 +133,7 @@ class LaporScreen extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () async {
-                          final Uri url = Uri.parse('tel:119');
-                          if (await launcher.canLaunchUrl(url)) {
-                            await launcher.launchUrl(url);
-                          }
-                        },
+                        onPressed: () => _makePhoneCall(context),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFFA726),
                           shape: RoundedRectangleBorder(
@@ -192,7 +236,7 @@ class LaporScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            const SizedBox(height: 3),
             const Center(
               child: Text(
                 'Lapor',

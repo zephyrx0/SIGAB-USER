@@ -148,7 +148,9 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return data;
+        return {
+          'data': data, // Use the defined 'data' variable
+        };
       } else {
         throw data['message'] ?? 'Gagal mengambil data cuaca';
       }
@@ -562,6 +564,57 @@ class ApiService {
       if (e is String) {
         rethrow;
       }
+      throw e.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  // Tips Mitigasi
+  static Future<List<dynamic>> getTipsMitigasi() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$appUrl/tips-mitigasi'),
+        // Headers might not be needed for a public endpoint, removing _getHeaders call
+        // headers: await _getHeaders(), // Removed
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == 'success') {
+        // Ensure 'data' key exists and is a list
+        if (data['data'] is List) {
+          return data['data']; // Return the list inside 'data' key
+        } else {
+          throw Exception('Invalid data format received for tips mitigasi');
+        }
+      } else {
+        // Handle API errors based on status code and message
+        throw Exception(data['message'] ??
+            'Failed to load tips mitigasi (Status: ${response.statusCode})');
+      }
+    } catch (e) {
+      // General error during fetch or decoding
+      throw Exception('Error fetching tips: ${e.toString()}');
+    }
+  }
+
+  /// Fungsi untuk mengecek peringatan cuaca (hujan hari ini)
+  static Future<Map<String, dynamic>> checkWeatherWarning() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$appUrl/check-weather-warning'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200) {
+        return data; // Expected to contain 'should_notify': bool and possibly 'message': String
+      } else {
+        throw Exception(data['message'] ?? 'Gagal mengecek peringatan cuaca');
+      }
+    } catch (e) {
       throw e.toString().replaceAll('Exception: ', '');
     }
   }

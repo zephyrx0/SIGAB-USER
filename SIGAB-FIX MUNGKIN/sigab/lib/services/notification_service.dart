@@ -131,6 +131,46 @@ class NotificationService {
     }
   }
 
+  Future<void> showWeatherWarningNotification({
+    required String title,
+    required String body,
+  }) async {
+    debugPrint('Attempting to show weather warning notification...');
+
+    const androidDetails = AndroidNotificationDetails(
+      'weather_warning_channel',
+      'Weather Warnings',
+      channelDescription: 'Notifications about weather warnings',
+      importance: Importance.high,
+      priority: Priority.high,
+      showWhen: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    try {
+      await _notifications.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000 + 2,
+        title,
+        body,
+        notificationDetails,
+        payload: 'weather_warning',
+      );
+      debugPrint('Weather warning notification shown successfully');
+    } catch (e) {
+      debugPrint('Error showing weather warning notification: $e');
+    }
+  }
+
   Future<DateTime> getInstallDate() async {
     try {
       final prefs = await SharedPreferences.getInstance();

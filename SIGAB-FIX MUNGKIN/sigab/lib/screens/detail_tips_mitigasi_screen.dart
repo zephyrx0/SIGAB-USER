@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class DetailTipsMitigasiScreen extends StatelessWidget {
   final String title;
-  final String imagePath;
-  final List<TipsMitigasiItem> tipsList;
+  final String? imagePath;
+  final List<Map<String, dynamic>> tipsList;
 
   const DetailTipsMitigasiScreen({
     super.key,
@@ -17,9 +17,9 @@ class DetailTipsMitigasiScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: const Text(
-          'Detail Tips Mitigasi',
-          style: TextStyle(
+        title: Text(
+          title,
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
             fontFamily: 'Poppins',
@@ -40,26 +40,45 @@ class DetailTipsMitigasiScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image Section
-                Image.asset(
-                  imagePath,
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                ),
+                imagePath != null && imagePath!.isNotEmpty
+                    ? Image.network(
+                        imagePath!,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: Colors.grey[300],
+                          height: 200,
+                          child: const Icon(Icons.broken_image,
+                              size: 50, color: Colors.grey),
+                        ),
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: 200,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes !=
+                                        null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Colors.grey[300],
+                        height: 200,
+                        child: const Icon(Icons.image_not_supported,
+                            size: 50, color: Colors.grey),
+                      ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Poppins',
-                        ),
-                      ),
                       const SizedBox(height: 16),
                       ListView.builder(
                         shrinkWrap: true,
@@ -67,13 +86,19 @@ class DetailTipsMitigasiScreen extends StatelessWidget {
                         itemCount: tipsList.length,
                         itemBuilder: (context, index) {
                           final tip = tipsList[index];
+                          final String tipTitle =
+                              tip['judul']?.toString() ?? 'Unknown Tip';
+                          final String tipDescription =
+                              tip['deskripsi']?.toString() ??
+                                  'No description available.';
+
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${index + 1}. ${tip.title}',
+                                  '${index + 1}. $tipTitle',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -82,7 +107,7 @@ class DetailTipsMitigasiScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  tip.description,
+                                  tipDescription,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontFamily: 'Poppins',

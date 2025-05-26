@@ -64,11 +64,46 @@ class HourlyForecastSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || error.isNotEmpty || weatherData == null) {
+    // Access the correct list of weather data: weatherData['data']['data']
+    final dynamic dataInnerListRaw = weatherData?['data']?['data'];
+
+    if (isLoading ||
+        error.isNotEmpty ||
+        weatherData == null ||
+        dataInnerListRaw is! List ||
+        dataInnerListRaw.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final todayForecast = weatherData!['data'][0]['cuaca'][0];
+    final List<dynamic> dataList = dataInnerListRaw as List<dynamic>;
+    final dynamic firstDataItem = dataList.isNotEmpty ? dataList.first : null;
+
+    if (firstDataItem == null ||
+        firstDataItem is! Map ||
+        firstDataItem['cuaca'] is! List) {
+      return const SizedBox.shrink();
+    }
+
+    final List<dynamic> rawForecasts = firstDataItem['cuaca'] as List<dynamic>;
+
+    if (rawForecasts.isEmpty) {
+      return const SizedBox
+          .shrink(); // Handle case with no forecast data periods
+    }
+
+    // Ambil hanya daftar perkiraan per jam untuk hari pertama
+    final dynamic todayHourlyForecastsRaw =
+        rawForecasts.isNotEmpty ? rawForecasts[0] : null;
+    if (todayHourlyForecastsRaw is! List || todayHourlyForecastsRaw.isEmpty) {
+      debugPrint(
+          'DEBUG Hourly: Today hourly forecasts item is not a List or is empty: $todayHourlyForecastsRaw');
+      return const SizedBox
+          .shrink(); // Handle jika data tidak sesuai atau kosong
+    }
+    final List<dynamic> todayHourlyForecasts =
+        todayHourlyForecastsRaw as List<dynamic>; // Cast ke List<dynamic>
+
+    // debugPrint('DEBUG Hourly: Data for hourly cards: $todayHourlyForecasts');
 
     return SizedBox(
       width: double.infinity,
@@ -91,10 +126,18 @@ class HourlyForecastSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: todayForecast.map<Widget>((forecast) {
+              children: todayHourlyForecasts.map<Widget>((forecast) {
+                if (forecast is! Map<String, dynamic>) {
+                  debugPrint(
+                      'DEBUG Hourly: Forecast item is not a Map: $forecast');
+                  return const SizedBox
+                      .shrink(); // Kembalikan widget kosong jika tipe tidak sesuai
+                }
+
                 final localTime =
                     DateTime.parse(forecast['local_datetime']).toLocal();
                 final timeFormat = DateFormat('HH:mm');
+
                 return _buildHourlyWeatherCard(
                   timeFormat.format(localTime),
                   '${forecast['t']}°C',

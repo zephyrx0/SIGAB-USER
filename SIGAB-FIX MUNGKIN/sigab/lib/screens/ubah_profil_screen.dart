@@ -137,6 +137,7 @@ class _UbahProfilScreenState extends State<UbahProfilScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
           'Ubah Profil',
           style: TextStyle(
@@ -147,6 +148,7 @@ class _UbahProfilScreenState extends State<UbahProfilScreen> {
         ),
         backgroundColor: Colors.white,
         elevation: 0,
+        toolbarHeight: 72,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

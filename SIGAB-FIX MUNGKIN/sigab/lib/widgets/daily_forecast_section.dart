@@ -61,12 +61,91 @@ class DailyForecastSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || error.isNotEmpty || weatherData == null) {
+    // Access the correct list of weather data: weatherData['data']['data']
+    final dynamic dataInnerListRaw = weatherData?['data']?['data'];
+
+    if (isLoading ||
+        error.isNotEmpty ||
+        weatherData == null ||
+        dataInnerListRaw is! List ||
+        dataInnerListRaw.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final allForecasts = weatherData!['data'][0]['cuaca'];
-    final dateFormat = DateFormat('MMM, d', 'id_ID');
+    final List<dynamic> dataList = dataInnerListRaw as List<dynamic>;
+    final dynamic firstDataItem = dataList.isNotEmpty ? dataList.first : null;
+
+    if (firstDataItem == null ||
+        firstDataItem is! Map ||
+        firstDataItem['cuaca'] is! List) {
+      return const SizedBox.shrink();
+    }
+
+    final List<dynamic> allHourlyForecasts =
+        firstDataItem['cuaca'] as List<dynamic>;
+
+    if (allHourlyForecasts.isEmpty) {
+      return const SizedBox
+          .shrink(); // Handle case with no forecast data periods
+    }
+
+    final dateFormatDisplay = DateFormat('MMM, d', 'id_ID');
+    final dateFormatGrouping = DateFormat(
+        'yyyy-MM-dd'); // Format untuk mengelompokkan berdasarkan tanggal
+
+    // Mengelompokkan perkiraan per jam dari struktur List bersarang berdasarkan hari
+    Map<String, Map<String, dynamic>> dailyForecasts = {};
+    // Loop melalui setiap daftar perkiraan (misal per hari atau periode)
+    for (var periodForecasts in allHourlyForecasts) {
+      // Tambahkan pengecekan tipe data untuk setiap daftar periode
+      if (periodForecasts is! List) {
+        debugPrint(
+            'DEBUG Daily: Period forecasts item is not a List: $periodForecasts');
+        continue; // Lewati item yang tidak sesuai tipe
+      }
+
+      // Loop melalui setiap perkiraan cuaca (per jam) di dalam daftar periode
+      for (var forecast in periodForecasts) {
+        // Tambahkan pengecekan tipe data untuk setiap item forecast
+        if (forecast is! Map<String, dynamic>) {
+          debugPrint('DEBUG Daily: Forecast item is not a Map: $forecast');
+          continue; // Lewati item yang tidak sesuai tipe
+        }
+
+        final localTimeStr = forecast['local_datetime']?.toString() ?? '';
+        final localTime = DateTime.tryParse(localTimeStr);
+        if (localTime == null) continue; // Skip if date is invalid
+
+        final dateKey = dateFormatGrouping.format(localTime);
+        // Ambil perkiraan pertama untuk setiap hari sebagai representasi harian
+        if (!dailyForecasts.containsKey(dateKey)) {
+          dailyForecasts[dateKey] = forecast;
+        }
+      }
+    }
+
+    // Menampilkan baris untuk setiap hari
+    final dailyForecastRows = dailyForecasts.entries.map((entry) {
+      final forecast =
+          entry.value; // Gunakan 'entry.value' yang sudah divalidasi Map
+      // Tambahkan pengecekan tambahan di sini jika diperlukan untuk mengakses properti 'forecast'
+      final dateKey = entry.key; // Gunakan dateKey yang sudah valid
+      final date = DateTime.tryParse(dateKey); // Parse dateKey to DateTime
+      if (date == null)
+        return const SizedBox.shrink(); // Skip if dateKey is invalid
+
+      return _buildDailyWeatherRow(
+        dateFormatDisplay.format(date),
+        getWeatherIcon(
+            forecast['weather_desc'] ?? ''), // Add null check for weather_desc
+        '${forecast['t'] ?? '--'}°', // Add null check for temperature
+      );
+    }).toList();
+
+    // Tambahkan pengecekan jika dailyForecastRows kosong setelah diproses
+    if (dailyForecastRows.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,16 +159,7 @@ class DailyForecastSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        ...allForecasts.map((dayForecast) {
-          final firstForecast = dayForecast[0];
-          final date =
-              DateTime.parse(firstForecast['local_datetime']).toLocal();
-          return _buildDailyWeatherRow(
-            dateFormat.format(date),
-            getWeatherIcon(firstForecast['weather_desc']),
-            '${firstForecast['t']}°',
-          );
-        }).toList(),
+        ...dailyForecastRows, // Menggunakan daftar baris perkiraan harian yang sudah diproses
       ],
     );
   }

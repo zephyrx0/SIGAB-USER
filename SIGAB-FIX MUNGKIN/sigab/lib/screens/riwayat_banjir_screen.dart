@@ -262,6 +262,21 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text(
+          'Riwayat Laporan Banjir',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Poppins',
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+        toolbarHeight: 72,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

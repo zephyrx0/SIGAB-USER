@@ -6,12 +6,16 @@ class UnifiedWeatherCard extends StatelessWidget {
   final Map<String, dynamic>? weatherData;
   final String warningMessage;
   final String Function(String) getWeatherIcon;
+  final bool isLoading;
+  final String error;
 
   const UnifiedWeatherCard({
     Key? key,
     required this.weatherData,
     required this.warningMessage,
     required this.getWeatherIcon,
+    this.isLoading = false,
+    this.error = '',
   }) : super(key: key);
 
   Widget _buildWeatherInfo(
@@ -34,8 +38,6 @@ class UnifiedWeatherCard extends StatelessWidget {
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w500,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
           ),
         ],
@@ -45,11 +47,46 @@ class UnifiedWeatherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (weatherData == null) {
+    // Access the correct list of weather data: weatherData['data']['data']
+    final dynamic dataInnerListRaw = weatherData?['data']?['data'];
+
+    if (isLoading ||
+        error.isNotEmpty ||
+        weatherData == null ||
+        dataInnerListRaw is! List ||
+        dataInnerListRaw.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final weatherInfo = weatherData!['data'][0]['cuaca'][0][0];
+    final List<dynamic> dataList = dataInnerListRaw as List<dynamic>;
+    final dynamic firstDataItem = dataList.isNotEmpty ? dataList.first : null;
+
+    if (firstDataItem == null ||
+        firstDataItem is! Map ||
+        firstDataItem['cuaca'] is! List) {
+      return const SizedBox.shrink();
+    }
+
+    final List<dynamic> todayForecasts =
+        firstDataItem['cuaca'] as List<dynamic>;
+
+    if (todayForecasts.isEmpty) {
+      return const SizedBox.shrink(); // Handle case with no forecast data
+    }
+    final dynamic firstPeriodForecasts =
+        todayForecasts.isNotEmpty ? todayForecasts[0] : null;
+    if (firstPeriodForecasts is! List || firstPeriodForecasts.isEmpty) {
+      return const SizedBox
+          .shrink(); // Handle jika list pertama tidak valid atau kosong
+    }
+    final dynamic weatherInfo = firstPeriodForecasts.isNotEmpty
+        ? firstPeriodForecasts[0]
+        : null; // Ambil objek Map pertama dari List tersebut
+
+    if (weatherInfo == null || weatherInfo is! Map) {
+      return const SizedBox.shrink(); // Handle jika weatherInfo tidak valid
+    }
+
     final now = DateTime.now();
     final dateFormat = DateFormat('EEEE, d MMMM y', 'id_ID');
     final formattedDate = dateFormat.format(now);

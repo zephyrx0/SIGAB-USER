@@ -149,6 +149,49 @@ void main() async {
         debugPrint('Latest Flood Info: No flood information found.');
       }
       // --- Akhir logika cek notifikasi informasi banjir terbaru ---
+
+      // --- Logika cek notifikasi peringatan cuaca ---
+      debugPrint('Checking for weather warning notification...');
+      try {
+        final weatherWarningData = await ApiService.checkWeatherWarning();
+        debugPrint('Weather warning response: $weatherWarningData');
+
+        if (weatherWarningData['should_notify']) {
+          debugPrint(
+              'Weather Warning Notification Status: Should notify: true');
+          final prefs = await SharedPreferences.getInstance();
+          final lastWeatherWarningMessage =
+              prefs.getString('lastWeatherWarningMessage');
+          final currentWeatherWarningMessage =
+              weatherWarningData['message'] ?? '';
+
+          if (currentWeatherWarningMessage.isNotEmpty &&
+              lastWeatherWarningMessage != currentWeatherWarningMessage) {
+            debugPrint(
+                'Weather Warning: New warning detected, showing notification...');
+            await NotificationService().showWeatherWarningNotification(
+              title: 'Peringatan Cuaca',
+              body: currentWeatherWarningMessage,
+            );
+            await prefs.setString(
+                'lastWeatherWarningMessage', currentWeatherWarningMessage);
+            debugPrint(
+                'Weather Warning: Saved last warning message: $currentWeatherWarningMessage');
+          } else {
+            debugPrint(
+                'Weather Warning: No new warning message, skipping notification.');
+          }
+        } else {
+          debugPrint(
+              'Weather Warning Notification Status: Should notify: false');
+          // Optional: Clear last warning message if backend says no warning
+          // final prefs = await SharedPreferences.getInstance();
+          // await prefs.remove('lastWeatherWarningMessage');
+        }
+      } catch (e) {
+        debugPrint('ERROR CHECKING WEATHER WARNING: $e');
+      }
+      // --- Akhir logika cek notifikasi peringatan cuaca ---
     } catch (e, stacktrace) {
       debugPrint('ERROR IN PERIODIC CHECK: $e');
       // debugPrint('STACKTRACE: $stacktrace');

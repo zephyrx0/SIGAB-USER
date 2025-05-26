@@ -1,67 +1,51 @@
 import 'package:flutter/material.dart';
 import 'detail_tips_mitigasi_screen.dart';
+import '../api_service.dart';
 
-class TipsMitigasiScreen extends StatelessWidget {
+class TipsMitigasiScreen extends StatefulWidget {
   const TipsMitigasiScreen({super.key});
 
-  List<TipsMitigasiItem> _getBanjirTips() {
-    return [
-      const TipsMitigasiItem(
-        title: 'Pengelolaan Tata Ruang dan Lingkungan',
-        description:
-            'Pengelolaan tata ruang yang baik adalah kunci dalam mitigasi banjir. Ini melibatkan perencanaan penggunaan lahan yang bijaksana dengan memperhatikan pembangunan di daerah rawan banjir, seperti di sekitar sungai dan dataran rendah. Pemerintah harus menetapkan zona-zona khusus yang tidak boleh digunakan kawasan permukiman atau industri.',
-      ),
-      const TipsMitigasiItem(
-        title: 'Sistem Peringatan Dini',
-        description:
-            'Pemasangan sistem peringatan dini yang efektif sangat penting untuk memberikan informasi tepat waktu kepada masyarakat tentang kemungkinan terjadinya banjir. Teknologi seperti sensor curah hujan, pemantauan sungai, dan prakiraan cuaca dapat membantu mendeteksi potensi banjir lebih awal. Informasi ini kemudian dapat disebarkan melalui radio, televisi, SMS, dan aplikasi smartphone.',
-      ),
-      const TipsMitigasiItem(
-        title: 'Persiapan Menghadapi Banjir',
-        description:
-            'Siapkan tas darurat yang berisi barang-barang penting seperti dokumen, obat-obatan, makanan tahan lama, air minum, senter, dan radio portable. Kenali rute evakuasi dan tempat pengungsian terdekat. Pastikan seluruh anggota keluarga mengetahui prosedur evakuasi.',
-      ),
-    ];
+  @override
+  State<TipsMitigasiScreen> createState() => _TipsMitigasiScreenState();
+}
+
+class _TipsMitigasiScreenState extends State<TipsMitigasiScreen> {
+  bool isLoading = true;
+  Map<String, List<Map<String, dynamic>>> groupedTips = {};
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTipsData();
   }
 
-  List<TipsMitigasiItem> _getGempaTips() {
-    return [
-      const TipsMitigasiItem(
-        title: 'Identifikasi Tempat Aman',
-        description:
-            'Kenali tempat-tempat aman di dalam ruangan seperti di bawah meja yang kokoh, di sudut ruangan, atau di bawah kusen pintu. Hindari area dekat jendela, lemari, atau benda-benda yang bisa jatuh.',
-      ),
-      const TipsMitigasiItem(
-        title: 'Persiapkan Tas Darurat',
-        description:
-            'Siapkan tas darurat yang berisi perlengkapan penting seperti air minum, makanan tahan lama, obat-obatan, senter, radio portable, dan dokumen penting. Pastikan semua anggota keluarga tahu lokasi tas darurat.',
-      ),
-      const TipsMitigasiItem(
-        title: 'Latihan Evakuasi Rutin',
-        description:
-            'Lakukan latihan evakuasi secara rutin bersama keluarga. Kenali rute evakuasi dan titik kumpul yang telah ditentukan. Pastikan setiap anggota keluarga memahami apa yang harus dilakukan saat terjadi gempa.',
-      ),
-    ];
-  }
+  Future<void> _loadTipsData() async {
+    try {
+      final List<dynamic> tipsList = await ApiService.getTipsMitigasi();
 
-  List<TipsMitigasiItem> _getCuacaEkstremTips() {
-    return [
-      const TipsMitigasiItem(
-        title: 'Pantau Informasi Cuaca',
-        description:
-            'Selalu pantau informasi cuaca dari sumber resmi seperti BMKG. Perhatikan peringatan dini cuaca ekstrem dan ikuti petunjuk dari otoritas setempat.',
-      ),
-      const TipsMitigasiItem(
-        title: 'Amankan Rumah dan Lingkungan',
-        description:
-            'Pastikan atap rumah dalam kondisi baik dan kuat. Bersihkan saluran air dan selokan dari sampah. Pangkas dahan pohon yang berpotensi patah dan membahayakan.',
-      ),
-      const TipsMitigasiItem(
-        title: 'Persiapkan Kebutuhan Darurat',
-        description:
-            'Siapkan persediaan makanan, air minum, obat-obatan, dan kebutuhan darurat lainnya yang cukup untuk beberapa hari. Siapkan senter dan baterai cadangan untuk mengantisipasi pemadaman listrik.',
-      ),
-    ];
+      // Group tips by title (category)
+      final Map<String, List<Map<String, dynamic>>> tempGroupedTips = {};
+      for (var tip in tipsList) {
+        if (tip is Map<String, dynamic>) {
+          final String title = tip['judul']?.toString() ?? 'Unknown Category';
+          if (!tempGroupedTips.containsKey(title)) {
+            tempGroupedTips[title] = [];
+          }
+          tempGroupedTips[title]!.add(tip);
+        }
+      }
+
+      setState(() {
+        groupedTips = tempGroupedTips;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
   }
 
   Widget _buildLinksOutIcon({double size = 20}) {
@@ -93,8 +77,8 @@ class TipsMitigasiScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTipsCard(String title, String imagePath,
-      List<TipsMitigasiItem> tips, BuildContext context) {
+  Widget _buildTipsCard(String title, String? imageUrl,
+      List<Map<String, dynamic>> tips, BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(
@@ -102,14 +86,14 @@ class TipsMitigasiScreen extends StatelessWidget {
           '/detail-tips-mitigasi',
           arguments: {
             'title': title,
-            'imagePath': imagePath,
+            'imagePath': imageUrl,
             'tipsList': tips,
           },
         );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        height: 120,
+        height: 140,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           color: Colors.white,
@@ -125,14 +109,46 @@ class TipsMitigasiScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Stack(
             children: [
-              // Image
-              Image.asset(
-                imagePath,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
+              imageUrl != null && imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl!,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[300],
+                        child: const Icon(Icons.broken_image,
+                            size: 50, color: Colors.grey),
+                      ),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image_not_supported,
+                          size: 50, color: Colors.grey),
+                    ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0),
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
               ),
-              // Content
               Positioned(
                 left: 16,
                 right: 16,
@@ -140,13 +156,17 @@ class TipsMitigasiScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                       ),
                     ),
                     Container(
@@ -186,40 +206,54 @@ class TipsMitigasiScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        toolbarHeight: 72,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTipsCard(
-                  'Tips Mitigasi Bencana Banjir',
-                  'assets/images/m_banjir.jpeg',
-                  _getBanjirTips(),
-                  context,
-                ),
-                _buildTipsCard(
-                  'Tips Mitigasi Gempa Bumi',
-                  'assets/images/m_gempa.jpeg',
-                  _getGempaTips(),
-                  context,
-                ),
-                _buildTipsCard(
-                  'Tips Menghadapi Cuaca Ekstrem',
-                  'assets/images/m_cuaca_ekstrem.jpeg',
-                  _getCuacaEkstremTips(),
-                  context,
-                ),
-              ],
-            ),
-          ),
-        ),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Error: $error',
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadTipsData,
+                          child: const Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: groupedTips.entries.map((entry) {
+                          final categoryTitle = entry.key;
+                          final tipsInCategory = entry.value;
+                          final imageUrl = tipsInCategory.isNotEmpty
+                              ? tipsInCategory[0]['media']?.toString()
+                              : null;
+
+                          return _buildTipsCard(
+                            categoryTitle,
+                            imageUrl,
+                            tipsInCategory,
+                            context,
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
       ),
     );
   }

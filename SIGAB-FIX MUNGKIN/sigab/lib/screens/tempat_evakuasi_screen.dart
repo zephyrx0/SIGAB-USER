@@ -194,6 +194,7 @@ class _TempatEvakuasiScreenState extends State<TempatEvakuasiScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        toolbarHeight: 72,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),

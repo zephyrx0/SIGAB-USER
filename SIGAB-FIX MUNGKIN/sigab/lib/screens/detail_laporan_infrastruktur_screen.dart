@@ -269,6 +269,7 @@ class _DetailLaporanInfrastrukturScreenState
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        toolbarHeight: 72,
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
