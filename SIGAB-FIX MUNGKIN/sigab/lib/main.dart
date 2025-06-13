@@ -17,6 +17,8 @@ import 'screens/tempat_evakuasi_screen.dart';
 import 'screens/tips_mitigasi_screen.dart';
 import 'screens/laporan_banjir_screen.dart';
 import 'screens/laporan_infrastruktur_screen.dart';
+import 'screens/ubah_profil_screen.dart';
+import 'screens/ubah_password_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -192,7 +194,7 @@ void main() async {
         debugPrint('ERROR CHECKING WEATHER WARNING: $e');
       }
       // --- Akhir logika cek notifikasi peringatan cuaca ---
-    } catch (e, stacktrace) {
+    } catch (e) {
       debugPrint('ERROR IN PERIODIC CHECK: $e');
       // debugPrint('STACKTRACE: $stacktrace');
     }
@@ -223,6 +225,8 @@ class MyApp extends StatelessWidget {
         '/reset-password': (context) => const ResetPasswordScreen(),
         '/lapor': (context) => const LaporScreen(),
         '/lainnya': (context) => const LainnyaScreen(),
+        '/ubah-profil': (context) => const UbahProfilScreen(),
+        '/ubah-password': (context) => const UbahPasswordScreen(),
         '/detail-riwayat-banjir': (context) {
           final args = ModalRoute.of(context)!.settings.arguments
               as Map<String, dynamic>;

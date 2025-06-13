@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
-import 'tempat_evakuasi_screen.dart';
-import 'tips_mitigasi_screen.dart';
 import 'profil_screen.dart';
+import '../api_service.dart';
 
 class LainnyaScreen extends StatelessWidget {
   const LainnyaScreen({super.key});
+
+  Future<void> _checkTokenAndNavigate(BuildContext context) async {
+    final token = await ApiService.getToken();
+    if (token == null) {
+      // Jika tidak ada token, arahkan ke halaman login dan hapus semua route sebelumnya
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    } else {
+      // Jika ada token, lanjut ke halaman profil
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfilScreen(),
+        ),
+      );
+    }
+  }
 
   Widget _buildImageCard(String title, String imagePath, VoidCallback? onTap) {
     return GestureDetector(
@@ -108,12 +123,7 @@ class LainnyaScreen extends StatelessWidget {
                   height: 45,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfilScreen(),
-                        ),
-                      );
+                      _checkTokenAndNavigate(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFA726),

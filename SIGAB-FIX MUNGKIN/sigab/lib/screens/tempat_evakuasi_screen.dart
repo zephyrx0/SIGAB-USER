@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../api_service.dart';
-import 'package:sigab/utils/wave_painter.dart'; // Import WavePainter
+// Import WavePainter
 
 class TempatEvakuasiScreen extends StatefulWidget {
   const TempatEvakuasiScreen({super.key});

@@ -4,8 +4,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'riwayat_banjir_screen.dart';
 import '../api_service.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart';
 import 'package:sigab/widgets/map_widget.dart';
 import 'package:sigab/widgets/flood_info_card.dart';
 
@@ -131,6 +129,28 @@ class _BanjirScreenState extends State<BanjirScreen> {
         _isLoading = false;
         _calculateMapCenterAndZoom(); // Tetap hitung jika hanya user location yang ada
       });
+    }
+  }
+
+  // Tambahkan fungsi untuk retry loading map tiles
+  Future<void> _retryLoadMapTiles() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
+    await Future.delayed(
+        const Duration(seconds: 2)); // Tunggu 2 detik sebelum retry
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  // Tambahkan error handler untuk map tile loading
+  void _handleMapTileError(dynamic error) {
+    print('Map tile loading error: $error');
+    if (error.toString().contains('Connection closed')) {
+      _retryLoadMapTiles();
     }
   }
 

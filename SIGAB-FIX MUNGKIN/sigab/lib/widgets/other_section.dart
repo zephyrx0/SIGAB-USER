@@ -156,13 +156,13 @@ class OtherSection extends StatelessWidget {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: onResetTap,
-            child: const Text('Reset Notifikasi Banjir Testing'),
-          ),
-        ),
+        // Padding(
+        //   padding: const EdgeInsets.all(16.0),
+        //   child: ElevatedButton(
+        //     onPressed: onResetTap,
+        //     child: const Text('Reset Notifikasi Banjir Testing'),
+        //   ),
+        // ),
       ],
     );
   }

@@ -8,7 +8,7 @@ import 'screens/forgot_password_screen.dart';
 import 'screens/reset_password_screen.dart';
 import 'screens/lapor_screen.dart';
 import 'screens/lainnya_screen.dart';
-
+import 'screens/ubah_profil_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,6 +36,7 @@ class MyApp extends StatelessWidget {
         '/reset-password': (context) => const ResetPasswordScreen(),
         '/lapor': (context) => const LaporScreen(),
         '/lainnya': (context) => const LainnyaScreen(),
+        '/ubah-profil': (context) => const UbahProfilScreen(),
       },
       debugShowCheckedModeBanner: false,
     );

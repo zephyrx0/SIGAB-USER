@@ -54,7 +54,7 @@ class DetailTipsMitigasiScreen extends StatelessWidget {
                         ),
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
-                          return Container(
+                          return SizedBox(
                             height: 200,
                             child: Center(
                               child: CircularProgressIndicator(

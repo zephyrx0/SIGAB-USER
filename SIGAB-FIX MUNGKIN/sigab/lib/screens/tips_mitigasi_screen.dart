@@ -111,7 +111,7 @@ class _TipsMitigasiScreenState extends State<TipsMitigasiScreen> {
             children: [
               imageUrl != null && imageUrl.isNotEmpty
                   ? Image.network(
-                      imageUrl!,
+                      imageUrl,
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,

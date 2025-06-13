@@ -30,12 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final token = await ApiService.getToken();
-      if (!mounted) return;
-
-      if (token != null && token.isNotEmpty) {
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-      }
+      // No automatic redirection here. Login screen should wait for user input.
+      // The token check and redirection to login if invalid is handled by other screens (e.g., ProfilScreen).
+      // Keep the _isLoading state change.
     } catch (e) {
       // Token tidak ada atau tidak valid, biarkan user di halaman login
     } finally {

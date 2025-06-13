@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import '../api_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'main_screen.dart';
 // Import Uint8List
 
 class DetailLaporanInfrastrukturScreen extends StatefulWidget {
@@ -133,8 +131,7 @@ class _DetailLaporanInfrastrukturScreenState
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('user_id');
+      final userId = await ApiService.getUserIdFromToken();
       if (userId == null) {
         throw Exception('User ID tidak ditemukan');
       }

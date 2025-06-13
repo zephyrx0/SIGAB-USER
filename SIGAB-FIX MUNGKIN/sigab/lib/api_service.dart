@@ -4,11 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigab/services/notification_service.dart';
 import 'package:sigab/services/twilio_service.dart';
+import 'package:jwt_decoder/jwt_decoder.dart'; // Import jwt_decoder
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   /// URL dasar untuk API endpoint
   static const String baseUrl =
-      'https://4d50-36-69-143-197.ngrok-free.app/api'; // Ubah menjadi base API saja
+      'https://d3d2-2a09-bac5-3a11-18c8-00-278-61.ngrok-free.app/api'; // Ubah menjadi base API saja
   // 'http://localhost:3000/api'; // Ubah menjadi base API saja
   static const String userUrl = '$baseUrl/users'; // Tambah endpoint khusus user
   static const String appUrl = '$baseUrl/app'; // Tambah endpoint khusus app
@@ -16,7 +18,18 @@ class ApiService {
   /// Fungsi untuk mendapatkan token dari penyimpanan lokal
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token');
+    final token = prefs.getString('token');
+
+    if (token != null) {
+      if (JwtDecoder.isExpired(token)) {
+        // Token kedaluwarsa, hapus dari penyimpanan
+        await removeToken();
+        return null;
+      } else {
+        return token;
+      }
+    }
+    return null;
   }
 
   /// Fungsi untuk menyimpan token ke penyimpanan lokal
@@ -75,14 +88,29 @@ class ApiService {
   static Future<Map<String, dynamic>> login(
       String nomorWa, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse('$userUrl/login'), // Gunakan userUrl
+      // Menghapus karakter '+62' jika ada di awal nomor
+      String phoneNumber = nomorWa.trim();
+      if (phoneNumber.startsWith('+62')) {
+        phoneNumber = phoneNumber.substring(3);
+      }
+
+      final client = http.Client();
+      final response = await client.post(
+        Uri.parse('$userUrl/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'nomor_wa': nomorWa,
+          'nomor_wa': phoneNumber,
           'password': password,
         }),
       );
+      client.close();
+
+      debugPrint('DEBUG ApiService.login: Request URL: $userUrl/login');
+      debugPrint(
+          'DEBUG ApiService.login: Response status code: ${response.statusCode}');
+      debugPrint('DEBUG ApiService.login: Response body: ${response.body}');
+      debugPrint(
+          'DEBUG ApiService.login: Response headers: ${response.headers}');
 
       final data = jsonDecode(response.body);
 

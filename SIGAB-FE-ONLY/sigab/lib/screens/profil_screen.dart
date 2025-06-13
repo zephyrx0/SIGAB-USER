@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'ubah_profil_screen.dart';
 import 'ubah_password_screen.dart';
 
 class ProfilScreen extends StatelessWidget {
@@ -54,7 +53,8 @@ class ProfilScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           border: Border.all(color: Colors.blue),
                           borderRadius: BorderRadius.circular(8),
@@ -103,12 +103,7 @@ class ProfilScreen extends StatelessWidget {
               height: 48,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UbahProfilScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/ubah-profil');
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFA726),
@@ -167,7 +162,8 @@ class ProfilScreen extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return Dialog(
-                        insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+                        insetPadding:
+                            const EdgeInsets.symmetric(horizontal: 40),
                         child: Container(
                           padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                           child: Column(
@@ -208,9 +204,11 @@ class ProfilScreen extends StatelessWidget {
                                           Navigator.of(context).pop();
                                         },
                                         style: OutlinedButton.styleFrom(
-                                          side: const BorderSide(color: Color(0xFFFFA726)),
+                                          side: const BorderSide(
+                                              color: Color(0xFFFFA726)),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                         child: const Text(
@@ -231,17 +229,21 @@ class ProfilScreen extends StatelessWidget {
                                       height: 40,
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          Navigator.of(context).pop(); // Tutup dialog
+                                          Navigator.of(context)
+                                              .pop(); // Tutup dialog
                                           Navigator.pushNamedAndRemoveUntil(
                                             context,
                                             '/login',
-                                            (route) => false, // Hapus semua route sebelumnya
+                                            (route) =>
+                                                false, // Hapus semua route sebelumnya
                                           );
                                         },
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFFFFA726),
+                                          backgroundColor:
+                                              const Color(0xFFFFA726),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
                                           ),
                                         ),
                                         child: const Text(

@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sigab/api_service.dart';
-import 'detail_riwayat_banjir_screen.dart' hide WavePainter;
-import 'main_screen.dart';
-import 'cuaca_screen.dart';
-import 'lapor_screen.dart';
-import 'lainnya_screen.dart';
 import 'package:sigab/utils/wave_painter.dart';
 
 class RiwayatBanjirScreen extends StatefulWidget {
@@ -262,21 +257,21 @@ class _RiwayatBanjirScreenState extends State<RiwayatBanjirScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text(
-          'Riwayat Laporan Banjir',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-          ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
-        toolbarHeight: 72,
-      ),
+      // appBar: AppBar(
+      //   centerTitle: true,
+      //   title: const Text(
+      //     'Riwayat Banjir',
+      //     style: TextStyle(
+      //       fontSize: 20,
+      //       fontWeight: FontWeight.w600,
+      //       fontFamily: 'Poppins',
+      //     ),
+      //   ),
+      //   backgroundColor: Colors.white,
+      //   foregroundColor: Colors.black,
+      //   elevation: 0,
+      //   toolbarHeight: 72,
+      // ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(

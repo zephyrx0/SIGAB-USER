@@ -4,8 +4,6 @@ import 'package:url_launcher/url_launcher.dart' as launcher;
 import 'package:permission_handler/permission_handler.dart';
 import 'laporan_banjir_screen.dart';
 import 'laporan_infrastruktur_screen.dart';
-import '../widgets/success_dialog.dart';
-import 'package:sigab/utils/wave_painter.dart';
 
 class LaporScreen extends StatelessWidget {
   const LaporScreen({super.key});
@@ -218,12 +216,16 @@ class LaporScreen extends StatelessWidget {
 
   Future<void> _checkTokenAndNavigate(
       BuildContext context, String routeName) async {
+    debugPrint(
+        'DEBUG LaporScreen: _checkTokenAndNavigate started for route: $routeName');
     final token = await ApiService.getToken();
-    if (token == null) {
-      // Jika tidak ada token, arahkan ke halaman login
-      Navigator.of(context).pushNamed('/login');
+    debugPrint('DEBUG LaporScreen: Token retrieved: $token');
+    if (token == null || token.isEmpty) {
+      debugPrint(
+          'DEBUG LaporScreen: Token is null or empty, redirecting to /login');
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     } else {
-      // Jika ada token, lanjut ke halaman tujuan
+      debugPrint('DEBUG LaporScreen: Token exists, navigating to: $routeName');
       Navigator.pushNamed(context, routeName);
     }
   }

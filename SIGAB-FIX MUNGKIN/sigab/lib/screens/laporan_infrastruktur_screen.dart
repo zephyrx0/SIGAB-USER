@@ -24,7 +24,7 @@ class _LaporanInfrastrukturScreenState
   @override
   void initState() {
     super.initState();
-    _checkToken();
+    _checkTokenAndLoad();
     _getCurrentLocation();
     _initializeCamera();
   }
@@ -58,12 +58,15 @@ class _LaporanInfrastrukturScreenState
     super.dispose();
   }
 
-  Future<void> _checkToken() async {
-    final token = await ApiService.getToken();
-    if (token == null) {
+  Future<void> _checkTokenAndLoad() async {
+    try {
+      await ApiService.viewProfile();
+    } catch (e) {
+      debugPrint(
+          'DEBUG LaporanInfrastrukturScreen: Token validation failed: $e');
       if (!mounted) return;
-      // Redirect ke halaman login jika tidak ada token
-      Navigator.of(context).pushReplacementNamed('/login');
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      return;
     }
   }
 

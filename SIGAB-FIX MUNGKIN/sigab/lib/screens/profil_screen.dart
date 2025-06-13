@@ -16,45 +16,69 @@ class _ProfilScreenState extends State<ProfilScreen> {
   String? nomorWa;
   bool isLoading = true;
   String? error;
-  bool _isFirstLoad = true;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isFirstLoad) {
-      _isFirstLoad = false;
-      _loadProfile();
-    } else {
-      // Selalu refresh data setiap halaman muncul kembali
-      _loadProfile();
+  void initState() {
+    super.initState();
+    _initialTokenCheckAndLoadProfile();
+  }
+
+  Future<void> _initialTokenCheckAndLoadProfile() async {
+    debugPrint('DEBUG: _initialTokenCheckAndLoadProfile started');
+    final token = await ApiService.getToken();
+    debugPrint('DEBUG: Token retrieved: $token');
+    if (!mounted) {
+      debugPrint('DEBUG: _initialTokenCheckAndLoadProfile: Widget not mounted');
+      return;
     }
+
+    if (token == null || token.isEmpty) {
+      debugPrint('DEBUG: Token is null or empty, redirecting to /login');
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      return;
+    }
+
+    debugPrint('DEBUG: Token exists, loading profile...');
+    _loadProfile();
   }
 
   Future<void> _loadProfile() async {
+    debugPrint('DEBUG: _loadProfile started');
     try {
       final data = await ApiService.viewProfile();
-      if (!mounted) return;
+      if (!mounted) {
+        debugPrint('DEBUG: _loadProfile: Widget not mounted after API call');
+        return;
+      }
       setState(() {
-        nama = data?['data']?['nama'];
-        nomorWa = data?['data']?['nomor_wa'];
+        nama = data['data']?['nama'];
+        nomorWa = data['data']?['nomor_wa'];
         isLoading = false;
         error = null;
       });
+      debugPrint('DEBUG: Profile loaded successfully');
     } catch (e) {
-      if (!mounted) return;
+      debugPrint('DEBUG: Error in _loadProfile: $e');
+      if (!mounted) {
+        debugPrint(
+            'DEBUG: _loadProfile: Widget not mounted during error handling');
+        return;
+      }
 
-      // Jika error adalah "Token tidak ditemukan", langsung navigasi tanpa setState
-      if (e.toString().contains('Token tidak ditemukan')) {
+      if (e.toString().contains('Token tidak ditemukan') ||
+          e.toString().contains('Invalid token') ||
+          e.toString().contains('Tidak ada token yang diberikan')) {
+        debugPrint('DEBUG: Token-related error, redirecting to /login');
         Navigator.of(context)
             .pushNamedAndRemoveUntil('/login', (route) => false);
         return;
       }
 
-      // Untuk error lainnya, tampilkan pesan error
       setState(() {
         error = e.toString();
         isLoading = false;
       });
+      debugPrint('DEBUG: Error state set: $error');
     }
   }
 
@@ -183,7 +207,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         child: ElevatedButton(
                           onPressed: () async {
                             final result = await Navigator.pushNamed(
-                                context, '/ubah-profil'); // Use named route
+                                context, '/ubah-profil');
                             if (result == true) {
                               _loadProfile();
                             }
@@ -211,8 +235,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                         height: 48,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.pushNamed(
-                                context, '/ubah-password'); // Use named route
+                            Navigator.pushNamed(context, '/ubah-password');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFA726),
@@ -315,8 +338,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                                 height: 40,
                                                 child: ElevatedButton(
                                                   onPressed: () async {
-                                                    Navigator.of(context)
-                                                        .pop(); // tutup dialog dulu
+                                                    Navigator.of(context).pop();
                                                     debugPrint(
                                                         'DEBUG Logout: Dialog closed, delaying...');
                                                     await Future.delayed(
@@ -324,24 +346,21 @@ class _ProfilScreenState extends State<ProfilScreen> {
                                                             milliseconds: 100));
                                                     debugPrint(
                                                         'DEBUG Logout: Delay finished, calling ApiService.logout()...');
-
                                                     try {
                                                       await ApiService.logout();
                                                       debugPrint(
                                                           'DEBUG Logout: ApiService.logout() finished, navigating...');
                                                     } catch (e) {
-                                                      // Jika error adalah "Logged out successfully", anggap sebagai sukses
                                                       if (e.toString().contains(
                                                           'Logged out successfully')) {
                                                         debugPrint(
                                                             'DEBUG Logout: Logout successful, proceeding with navigation');
                                                       } else {
                                                         debugPrint(
-                                                            'DEBUG Logout: Unexpected error during logout: $e');
+                                                            'DEBUG Logout: Unexpected error during logout: \$e');
                                                       }
                                                     }
 
-                                                    // Gunakan parentContext untuk navigasi
                                                     if (!mounted) return;
                                                     debugPrint(
                                                         'DEBUG Logout: Navigating to /login using parentContext');

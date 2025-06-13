@@ -22,7 +22,7 @@ class _LaporanBanjirScreenState extends State<LaporanBanjirScreen> {
   @override
   void initState() {
     super.initState();
-    _checkToken();
+    _checkTokenAndLoad();
     _getCurrentLocation();
     _initializeCamera();
   }
@@ -56,12 +56,14 @@ class _LaporanBanjirScreenState extends State<LaporanBanjirScreen> {
     super.dispose();
   }
 
-  Future<void> _checkToken() async {
-    final token = await ApiService.getToken();
-    if (token == null) {
+  Future<void> _checkTokenAndLoad() async {
+    try {
+      await ApiService.viewProfile();
+    } catch (e) {
+      debugPrint('DEBUG LaporanBanjirScreen: Token validation failed: $e');
       if (!mounted) return;
-      // Redirect ke halaman login jika tidak ada token
-      Navigator.of(context).pushReplacementNamed('/login');
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      return;
     }
   }
 
